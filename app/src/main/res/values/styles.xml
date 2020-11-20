@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="SplashStyle" parent="Theme.AppCompat.NoActionBar">
+        <item name="android:windowBackground">@drawable/launcher</item>
+    </style>
+
+<!--    <style name="RobotoBoldTextAppearance">-->
+<!--        <item name="android:fontFamily">@font/roboto_condensed_bold</item>-->
+<!--    </style>-->
+    <style name="BoldTextAppearance">
+        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">24sp</item>
+    </style>
+
+</resources>
