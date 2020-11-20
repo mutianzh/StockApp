@@ -101,6 +101,7 @@ public class MainActivity extends AppCompatActivity {
             public boolean onQueryTextChange(String newText) {
                 //return false;
                 getSuggestions(newText, searchAutoComplete);
+
                 return false;
             }
         });
