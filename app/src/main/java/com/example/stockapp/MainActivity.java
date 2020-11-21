@@ -1,19 +1,22 @@
 package com.example.stockapp;
 
-import androidx.appcompat.app.AlertDialog;
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
 import androidx.appcompat.widget.Toolbar;
 
 import android.annotation.SuppressLint;
+
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -48,6 +51,7 @@ public class MainActivity extends AppCompatActivity {
         Toolbar myToolbar = (Toolbar) findViewById(R.id.myToolBar);
         setSupportActionBar(myToolbar);
         myToolbar.setTitleTextAppearance(this, R.style.BoldTextAppearance);
+
     }
 
     @SuppressLint("RestrictedApi")
@@ -101,7 +105,6 @@ public class MainActivity extends AppCompatActivity {
             public boolean onQueryTextChange(String newText) {
                 //return false;
                 getSuggestions(newText, searchAutoComplete);
-
                 return false;
             }
         });
@@ -155,3 +158,6 @@ public class MainActivity extends AppCompatActivity {
 
 
 }
+
+
+

@@ -6,6 +6,15 @@ android {
     compileSdkVersion 30
     buildToolsVersion "30.0.2"
 
+
+    dataBinding {
+        enabled=true
+    }
+
+    viewBinding {
+        enabled=true
+    }
+
     defaultConfig {
         applicationId "com.example.stockapp"
         minSdkVersion 16

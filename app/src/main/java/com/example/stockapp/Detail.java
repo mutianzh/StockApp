@@ -6,6 +6,9 @@ import androidx.appcompat.widget.Toolbar;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.view.View;
+import android.view.Window;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 public class Detail extends AppCompatActivity {
@@ -15,7 +18,7 @@ public class Detail extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
 
-        Toolbar myToolbar = (Toolbar) findViewById(R.id.include);
+        Toolbar myToolbar = (Toolbar) findViewById(R.id.myToolBar);
         myToolbar.setTitleTextAppearance(this, R.style.BoldTextAppearance);
         myToolbar.setTitleTextColor(Color.BLACK);
         setSupportActionBar(myToolbar);
@@ -26,5 +29,12 @@ public class Detail extends AppCompatActivity {
 
         TextView textView = findViewById(R.id.textView);
         textView.setText(message);
+
+//        requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
+//        setProgressBarIndeterminateVisibility(true);
+
+//        LinearLayout linlaHeaderProgress = (LinearLayout) findViewById(R.id.linlaHeaderProgress);
+//        linlaHeaderProgress.setVisibility(View.VISIBLE);
+
     }
 }
