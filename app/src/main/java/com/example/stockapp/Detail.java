@@ -2,6 +2,7 @@ package com.example.stockapp;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.widget.NestedScrollView;
 
 import android.content.Intent;
 import android.graphics.Color;
@@ -9,6 +10,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.view.Window;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 public class Detail extends AppCompatActivity {
@@ -24,11 +26,19 @@ public class Detail extends AppCompatActivity {
         setSupportActionBar(myToolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
+        // Get search quote
         Intent intent = getIntent();
         String message = intent.getStringExtra(MainActivity.EXTRA_MESSAGE);
 
         TextView textView = findViewById(R.id.textView);
         textView.setText(message);
+
+        NestedScrollView nestedScrollView = findViewById(R.id.alldetails);
+        LinearLayout progressBar = findViewById(R.id.progressbar);
+
+        nestedScrollView.setVisibility(View.GONE);
+        progressBar.setVisibility(View.VISIBLE);
+
 
 //        requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
 //        setProgressBarIndeterminateVisibility(true);

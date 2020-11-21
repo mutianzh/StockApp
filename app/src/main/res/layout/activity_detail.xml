@@ -16,7 +16,30 @@
 
         </androidx.appcompat.widget.Toolbar>
 
-        <ScrollView
+        <LinearLayout
+            android:id="@+id/progressbar"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+            <ProgressBar
+                android:layout_gravity="center"
+                android:layout_marginTop="200dp"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:indeterminateDrawable="@drawable/progress"/>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="Fetching Data"
+                android:textColor="@color/black"/>
+
+
+        </LinearLayout>
+
+        <androidx.core.widget.NestedScrollView
+            android:id="@+id/alldetails"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_marginStart="14dp"
@@ -173,14 +196,47 @@
                     android:textStyle="bold" />
 
                 <TextView
-                    android:id="@+id/about"
+                    android:id="@+id/aboutless"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:scrollHorizontally="true"
                     android:ellipsize="end"
                     android:maxLines="2"
-                    android:text="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"/>
+                    android:text="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                    android:textColor="@color/black" />
 
+
+                <TextView
+                    android:id="@+id/aboutmore"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                    android:textColor="@color/black" />
+
+
+                <TextView
+                    android:id="@+id/showmore"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:clickable="true"
+                    android:layout_gravity="right"
+                    android:text="Show more..." />
+
+
+                <TextView
+                    android:id="@+id/showless"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:clickable="true"
+                    android:text="Show less"
+                    android:layout_gravity="right"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="News"
+                    android:textColor="@color/black"
+                    android:textSize="20sp"
+                    android:textStyle="bold"/>
 
                 <TextView
                     android:id="@+id/textView"
@@ -190,9 +246,7 @@
             </LinearLayout>
 
 
-        </ScrollView>
-
-
+        </androidx.core.widget.NestedScrollView>
 
 
     </LinearLayout>
