@@ -9,6 +9,7 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
 import android.view.Window;
+import android.webkit.WebView;
 import android.widget.ArrayAdapter;
 import android.widget.GridView;
 import android.widget.LinearLayout;
@@ -218,6 +219,15 @@ public class Detail extends AppCompatActivity {
                 change.setTextColor(Color.BLACK);
             }
 
+            // Highcharts section
+            WebView webview = (WebView)findViewById(R.id.higchcharts);
+            webview.getSettings().setJavaScriptEnabled(true);
+            //webview.loadUrl("file:///android_asset/highcharts.html?ticker="+companyjson.get("ticker").getAsString());
+            System.out.println(chartdata[0]);
+
+            webview.loadUrl("file:///android_asset/highcharts.html?ticker="+chartdata[0]);
+
+
             // Stats section
             ArrayList<String> gridviewvalues = new ArrayList<String>();
             ArrayList<String> gridviewvalues2 = new ArrayList<String>();
@@ -239,7 +249,6 @@ public class Detail extends AppCompatActivity {
             gridviewvalues2.add("High: " + pricejson.get(0).getAsJsonObject().get("high").getAsString());
             gridviewvalues3.add("Volume: " + pricejson.get(0).getAsJsonObject().get("volume").getAsString());
 
-            //System.out.println(gridviewvalues);
             ArrayAdapter<String> gridviewadapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, gridviewvalues);
             ArrayAdapter<String> gridviewadapter2 = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, gridviewvalues2);
             ArrayAdapter<String> gridviewadapter3 = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, gridviewvalues3);
@@ -259,10 +268,10 @@ public class Detail extends AppCompatActivity {
             aboutmore.setVisibility(View.GONE);
             findViewById(R.id.showless).setVisibility(View.GONE);
 
+            //Remove progress bar
             findViewById(R.id.alldetails).setVisibility(View.VISIBLE);
             findViewById(R.id.progressbar).setVisibility(View.GONE);
             findViewById(R.id.errormessage).setVisibility(View.GONE);
-
 
 
         }
