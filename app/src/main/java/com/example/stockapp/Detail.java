@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.view.Window;
 import android.widget.ArrayAdapter;
+import android.widget.GridView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -30,6 +31,7 @@ import org.json.JSONObject;
 import org.w3c.dom.Text;
 
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 
 public class Detail extends AppCompatActivity {
 
@@ -216,16 +218,69 @@ public class Detail extends AppCompatActivity {
                 change.setTextColor(Color.BLACK);
             }
 
+            // Stats section
+            ArrayList<String> gridviewvalues = new ArrayList<String>();
+            ArrayList<String> gridviewvalues2 = new ArrayList<String>();
+            ArrayList<String> gridviewvalues3 = new ArrayList<String>();
 
+            gridviewvalues.add("Current price: " + pricejson.get(0).getAsJsonObject().get("last").getAsString());
+            gridviewvalues.add("Low: " + pricejson.get(0).getAsJsonObject().get("low").getAsString());
+            if (!pricejson.get(0).getAsJsonObject().get("bidPrice").isJsonNull()){
+                gridviewvalues.add("Bid Price: " + pricejson.get(0).getAsJsonObject().get("bidPrice").getAsString());
+            }else{
+                gridviewvalues.add("Bid Price: 0.0");
+            }
+            gridviewvalues2.add("Open price: " + pricejson.get(0).getAsJsonObject().get("open").getAsString());
+            if (!pricejson.get(0).getAsJsonObject().get("mid").isJsonNull()){
+                gridviewvalues2.add("Mid: " + pricejson.get(0).getAsJsonObject().get("mid").getAsString());
+            }else{
+                gridviewvalues2.add("Mid: 0.0");
+            }
+            gridviewvalues2.add("High: " + pricejson.get(0).getAsJsonObject().get("high").getAsString());
+            gridviewvalues3.add("Volume: " + pricejson.get(0).getAsJsonObject().get("volume").getAsString());
 
+            //System.out.println(gridviewvalues);
+            ArrayAdapter<String> gridviewadapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, gridviewvalues);
+            ArrayAdapter<String> gridviewadapter2 = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, gridviewvalues2);
+            ArrayAdapter<String> gridviewadapter3 = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, gridviewvalues3);
+            GridView gridView = findViewById(R.id.stats);
+            GridView gridView2 = findViewById(R.id.stats2);
+            GridView gridView3 = findViewById(R.id.stats3);
+            gridView.setAdapter(gridviewadapter);
+            gridView2.setAdapter(gridviewadapter2);
+            gridView3.setAdapter(gridviewadapter3);
 
+            // About section
+            TextView aboutless = findViewById(R.id.aboutless);
+            TextView aboutmore = findViewById(R.id.aboutmore);
 
+            aboutless.setText(companyjson.get("description").getAsString());
+            aboutmore.setText(companyjson.get("description").getAsString());
+            aboutmore.setVisibility(View.GONE);
+            findViewById(R.id.showless).setVisibility(View.GONE);
 
             findViewById(R.id.alldetails).setVisibility(View.VISIBLE);
             findViewById(R.id.progressbar).setVisibility(View.GONE);
             findViewById(R.id.errormessage).setVisibility(View.GONE);
+
+
+
         }
 
 
     }
+
+    public void showmore (View v){
+        findViewById(R.id.aboutmore).setVisibility(View.VISIBLE);
+        findViewById(R.id.showmore).setVisibility(View.GONE);
+        findViewById(R.id.aboutless).setVisibility(View.GONE);
+        findViewById(R.id.showless).setVisibility(View.VISIBLE);
+    }
+    public void showless (View v){
+        findViewById(R.id.aboutmore).setVisibility(View.GONE);
+        findViewById(R.id.showmore).setVisibility(View.VISIBLE);
+        findViewById(R.id.aboutless).setVisibility(View.VISIBLE);
+        findViewById(R.id.showless).setVisibility(View.GONE);
+    }
+
 }

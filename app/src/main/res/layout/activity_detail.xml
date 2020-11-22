@@ -130,25 +130,12 @@
                     android:layout_height="16dp" />
 
 
-<!--                <GridView-->
-<!--                    android:layout_width="match_parent"-->
-<!--                    android:layout_height="wrap_content"-->
-<!--                    android:numColumns="2">-->
-
-<!--                </GridView>-->
-
-
                 <androidx.constraintlayout.widget.ConstraintLayout
                     android:id="@+id/portfoliosection"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical">
 
-                    <!--                    <TextView-->
-                    <!--                        android:layout_width="wrap_content"-->
-                    <!--                        android:layout_height="wrap_content"-->
-                    <!--                        android:layout_alignParentLeft="true"-->
-                    <!--                        android:text="bottom" />-->
 
                     <TextView
                         android:id="@+id/portfoliomessage"
@@ -191,10 +178,30 @@
                     android:textColor="@color/black"
                     android:textSize="20sp"
                     android:textStyle="bold" />
+
                 <GridView
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="match_parent"
+                    android:minHeight="100dp"
+                    android:id="@+id/stats"
+                    android:stretchMode="columnWidth"
                     android:numColumns="3"/>
+                <GridView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:minHeight="100dp"
+                    android:id="@+id/stats2"
+                    android:stretchMode="columnWidth"
+                    android:numColumns="3"/>
+                <GridView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:minHeight="100dp"
+                    android:id="@+id/stats3"
+                    android:stretchMode="columnWidth"
+                    android:numColumns="3"/>
+
+
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -210,7 +217,7 @@
                     android:layout_height="wrap_content"
                     android:ellipsize="end"
                     android:maxLines="2"
-                    android:text="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                    android:text=""
                     android:textColor="@color/black" />
 
 
@@ -218,7 +225,7 @@
                     android:id="@+id/aboutmore"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                    android:text=""
                     android:textColor="@color/black" />
 
 
@@ -227,6 +234,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:clickable="true"
+                    android:onClick="showmore"
                     android:layout_gravity="right"
                     android:text="Show more..." />
 
@@ -236,6 +244,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:clickable="true"
+                    android:onClick="showless"
                     android:text="Show less"
                     android:layout_gravity="right"/>
 
