@@ -74,7 +74,7 @@ public class MainActivity extends AppCompatActivity {
         //Create ArrayAdapter and add data to search autocomplete object;
 //        String dataArr[] =  {"Apple" , "Amazon" , "Amd", "Microsoft", "Microwave", "MicroNews", "Intel", "Intelligence"};
 //
-//        ArrayAdapter<String> newsAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, dataArr);
+//        ArrayAdapter<String> newsAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, suggeestions);
 //        searchAutoComplete.setAdapter(newsAdapter);
 
         // Listen to search view item on click event.
@@ -124,7 +124,6 @@ public class MainActivity extends AppCompatActivity {
 
                 //System.out.println("get success");
                 JsonArray jsonArray = JsonParser.parseString(response).getAsJsonArray();
-                //System.out.println(jsonArray);
 
                 for (int i=0;i<jsonArray.size(); i++) {
                     JsonObject jsonObject = jsonArray.get(i).getAsJsonObject();
