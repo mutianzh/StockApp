@@ -27,6 +27,15 @@
             </intent-filter>
         </activity>
         <activity android:name=".MainActivity"></activity>
+
+        <receiver
+            android:name=".AlarmReceiver"
+            android:enabled="true"
+            android:exported="true">
+        </receiver>
+
+        <service android:name=".DetailUpdateService"></service>
+
     </application>
 
 </manifest>

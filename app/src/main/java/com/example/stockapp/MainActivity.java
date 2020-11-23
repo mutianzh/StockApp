@@ -125,8 +125,8 @@ public class MainActivity extends AppCompatActivity {
                 //System.out.println("get success");
                 JsonArray jsonArray = JsonParser.parseString(response).getAsJsonArray();
 
-                for (int i=0;i<jsonArray.size(); i++) {
-                    JsonObject jsonObject = jsonArray.get(i).getAsJsonObject();
+                for (JsonElement jsonElement : jsonArray) {
+                    JsonObject jsonObject = jsonElement.getAsJsonObject();
                     JsonElement name = jsonObject.get("name");
                     JsonElement ticker = jsonObject.get("ticker");
                     if (!name.isJsonNull() && !ticker.isJsonNull()){

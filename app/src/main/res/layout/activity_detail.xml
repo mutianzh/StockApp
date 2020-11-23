@@ -187,27 +187,87 @@
                     android:textSize="20sp"
                     android:textStyle="bold" />
 
-                <GridView
+<!--                <GridView-->
+<!--                    android:layout_width="match_parent"-->
+<!--                    android:layout_height="match_parent"-->
+<!--                    android:minHeight="100dp"-->
+<!--                    android:id="@+id/stats"-->
+<!--                    android:stretchMode="columnWidth"-->
+<!--                    android:numColumns="3"/>-->
+<!--                <GridView-->
+<!--                    android:layout_width="match_parent"-->
+<!--                    android:layout_height="match_parent"-->
+<!--                    android:minHeight="100dp"-->
+<!--                    android:id="@+id/stats2"-->
+<!--                    android:stretchMode="columnWidth"-->
+<!--                    android:numColumns="3"/>-->
+<!--                <GridView-->
+<!--                    android:layout_width="match_parent"-->
+<!--                    android:layout_height="match_parent"-->
+<!--                    android:minHeight="100dp"-->
+<!--                    android:id="@+id/stats3"-->
+<!--                    android:stretchMode="columnWidth"-->
+<!--                    android:numColumns="3"/>-->
+                <GridLayout
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:minHeight="100dp"
-                    android:id="@+id/stats"
-                    android:stretchMode="columnWidth"
-                    android:numColumns="3"/>
-                <GridView
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:minHeight="100dp"
-                    android:id="@+id/stats2"
-                    android:stretchMode="columnWidth"
-                    android:numColumns="3"/>
-                <GridView
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:minHeight="100dp"
-                    android:id="@+id/stats3"
-                    android:stretchMode="columnWidth"
-                    android:numColumns="3"/>
+                    android:layout_height="wrap_content"
+                    android:rowCount="3"
+                    android:columnCount="3">
+                    <TextView
+                        android:text="Current price"
+                        android:layout_column="0"
+                        android:layout_columnWeight="1"
+                        android:layout_row="0"
+                        android:gravity="center"
+                        android:id="@+id/currentPrice"/>
+
+                    <TextView
+                        android:text="Low"
+                        android:layout_columnWeight="1"
+                        android:layout_column="1"
+                        android:layout_row="0"
+                        android:gravity="center"
+                        android:id="@+id/low"/>
+
+                    <TextView
+                        android:text="bid price"
+                        android:layout_column="2"
+                        android:layout_columnWeight="1"
+                        android:layout_row="0"
+                        android:id="@+id/bidPrice"/>
+
+                    <TextView
+                        android:text="Open Price"
+                        android:layout_column="0"
+                        android:layout_columnWeight="1"
+                        android:layout_row="1"
+                        android:gravity="center"
+                        android:id="@+id/openPrice"/>
+
+                    <TextView
+                        android:text="mid"
+                        android:layout_columnWeight="1"
+                        android:layout_column="1"
+                        android:layout_row="1"
+                        android:gravity="center"
+                        android:id="@+id/mid"/>
+
+                    <TextView
+                        android:text="high"
+                        android:layout_column="2"
+                        android:layout_columnWeight="1"
+                        android:layout_row="1"
+                        android:id="@+id/high"/>
+
+                    <TextView
+                        android:text="volume"
+                        android:layout_column="0"
+                        android:layout_columnWeight="1"
+                        android:layout_row="2"
+                        android:gravity="center"
+                        android:id="@+id/volume"/>
+
+                </GridLayout>
 
 
 
