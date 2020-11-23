@@ -3,7 +3,7 @@
     android:pivotX="50%"
     android:pivotY="50%"
     android:fromDegrees="0"
-    android:toDegrees="360">
+    android:toDegrees="1080">
 
     <shape
         android:shape="ring"
@@ -21,7 +21,8 @@
             android:startColor="#4f24ad"
             android:centerColor="#eeeeee"
             android:endColor="#eeeeee"
-            android:angle="0"/>
+            android:angle="0"
+            android:centerX="@android:integer/config_longAnimTime"/>
 
 
     </shape>

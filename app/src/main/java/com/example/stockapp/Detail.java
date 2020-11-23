@@ -225,7 +225,7 @@ public class Detail extends AppCompatActivity {
             //webview.loadUrl("file:///android_asset/highcharts.html?ticker="+companyjson.get("ticker").getAsString());
             System.out.println(chartdata[0]);
 
-            webview.loadUrl("file:///android_asset/highcharts.html?ticker="+chartdata[0]);
+            webview.loadUrl("file:///android_asset/highcharts.html?ticker="+chartdata[0]+"&symbol="+companyjson.get("ticker").getAsString());
 
 
             // Stats section
