@@ -370,9 +370,12 @@ public class Detail extends AppCompatActivity {
             JsonArray articles = newsjson.get("articles").getAsJsonArray();
 
             // First news card
-            ImageView firstImage = findViewById(R.id.firstnewspicture);
-            Glide.with(firstImage).load(articles.get(0).getAsJsonObject().get("urlToImage").getAsString()).into(firstImage);
-            firstImage.setClipToOutline(true);
+            if (!articles.get(0).getAsJsonObject().get("urlToImage").isJsonNull()){
+                ImageView firstImage = findViewById(R.id.firstnewspicture);
+                Glide.with(firstImage).load(articles.get(0).getAsJsonObject().get("urlToImage").getAsString()).into(firstImage);
+                firstImage.setClipToOutline(true);
+            }
+
             TextView firstSource = findViewById(R.id.firstnewssource);
             firstSource.setText(articles.get(0).getAsJsonObject().get("source").getAsJsonObject().get("name").getAsString());
             TextView firstStamp = findViewById(R.id.firstnewstimestamp);
