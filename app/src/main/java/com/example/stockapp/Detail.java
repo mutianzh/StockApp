@@ -1,5 +1,6 @@
 package com.example.stockapp;
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.widget.NestedScrollView;
@@ -12,12 +13,15 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.Resources;
 import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.View;
 import android.view.Window;
 import android.webkit.WebView;
 import android.widget.ArrayAdapter;
 import android.widget.GridView;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -28,17 +32,19 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+import com.bumptech.glide.Glide;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-import org.w3c.dom.Text;
 
+import java.sql.Timestamp;
 import java.text.DecimalFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 
 public class Detail extends AppCompatActivity {
 
@@ -73,22 +79,39 @@ public class Detail extends AppCompatActivity {
 
         getData(quote);
         // changes for alarm receiver
-        AlarmReceiver.scheduleAlarms(this);
-        LocalBroadcastManager.getInstance(this),registerReceiver(
-                new BroadcastReceiver() {
-                    @Override
-                    public void onReceive(Context context, Intent intent) {
-                        String quote1 = intent.getStringExtra(MainActivity.EXTRA_MESSAGE);
-                        getPriceData();
-                    }
-                }, new IntentFilter(DetailUpdateService.ACTIVITY_SERVICE)
-        );
+//        AlarmReceiver.scheduleAlarms(this);
+
+//        LocalBroadcastManager.getInstance(this).registerReceiver(
+//                new BroadcastReceiver() {
+//                    @Override
+//                    public void onReceive(Context context, Intent intent) {
+//                        //String quote1 = intent.getStringExtra(MainActivity.EXTRA_MESSAGE);
+//                        //getPriceData(quote);
+//                        System.out.println("MyReceiver: here!");
+//                    }
+//                }, new IntentFilter(DetailUpdateService.ACTIVITY_SERVICE)
+//        );
+
+        final Handler handler = new Handler();
+        final int delay = 3600000; // 1000 milliseconds == 1 second
+
+        handler.postDelayed(new Runnable() {
+            public void run() {
+                //System.out.println("myHandler: here!");
+                getPriceData(quote);
+
+                handler.postDelayed(this, delay);
+            }
+        }, delay);
+
+
 
     }
 
     public void getPriceData (String quote) {
+        RequestQueue queue = Volley.newRequestQueue(this);
         String ticker = quote.split("-")[0];
-        String getpriceurl = "http://nodejsapp-env.eba-9tz487ps.us-east-1.elasticbeanstalk.com/price?arg1="+ticker;
+        String getpriceurl = "http://nodejsapp-env.eba-9tz487ps.us-east-1.elasticbeanstalk.com/debug?arg1="+ticker;
 
         final String[] pricedata = new String[1];
         StringRequest request1 = new StringRequest(Request.Method.GET, getpriceurl, new Response.Listener<String>() {
@@ -104,6 +127,8 @@ public class Detail extends AppCompatActivity {
                 error.printStackTrace();
             }
         });
+
+        queue.add(request1);
     }
 
     private void getData(String quote){
@@ -123,6 +148,7 @@ public class Detail extends AppCompatActivity {
         final int[] pendingrequests = {4};
 
         StringRequest request1 = new StringRequest(Request.Method.GET, getpriceurl, new Response.Listener<String>() {
+            @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
             @Override
             public void onResponse(String response) {
 
@@ -141,6 +167,7 @@ public class Detail extends AppCompatActivity {
         });
 
         StringRequest request2 = new StringRequest(Request.Method.GET, getcompanyurl, new Response.Listener<String>() {
+            @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
             @Override
             public void onResponse(String response) {
 
@@ -159,6 +186,7 @@ public class Detail extends AppCompatActivity {
         });
 
         StringRequest request3 = new StringRequest(Request.Method.GET, getcharturl, new Response.Listener<String>() {
+            @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
             @Override
             public void onResponse(String response) {
 
@@ -177,6 +205,7 @@ public class Detail extends AppCompatActivity {
         });
 
         StringRequest request4 = new StringRequest(Request.Method.GET, getnewsurl, new Response.Listener<String>() {
+            @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
             @Override
             public void onResponse(String response) {
 
@@ -202,6 +231,7 @@ public class Detail extends AppCompatActivity {
 
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     private  void updateviews(String[] pricedata, String[] companydata, String[] chartdata, String[] newsdata){
 
         JsonArray pricejson;
@@ -219,7 +249,7 @@ public class Detail extends AppCompatActivity {
             TextView errormessage= findViewById(R.id.errormessage);
             errormessage.setText("Wrong ticker");
 
-        }else{
+        }else {
 
             DecimalFormat df2 = new DecimalFormat("#.##");
 
@@ -234,6 +264,7 @@ public class Detail extends AppCompatActivity {
 //            Resources resources = getResources();
 //            String priceText = String.format(resources.getString(R.string.priceString), pricejson.get(0).getAsJsonObject().get("last").getAsString());
 //            price.setText(priceText);
+
 
             TextView name = findViewById(R.id.name);
             name.setText(companyjson.get("name").getAsString());
@@ -253,13 +284,13 @@ public class Detail extends AppCompatActivity {
             updatePrices(pricedata);
 
             // Highcharts section
-            WebView webview = (WebView)findViewById(R.id.higchcharts);
+            WebView webview = (WebView) findViewById(R.id.higchcharts);
             webview.getSettings().setJavaScriptEnabled(true);
             //webview.loadUrl("file:///android_asset/highcharts.html?ticker="+companyjson.get("ticker").getAsString());
-            webview.loadUrl("file:///android_asset/highcharts.html?ticker="+chartdata[0]+"&symbol="+companyjson.get("ticker").getAsString());
+            webview.loadUrl("file:///android_asset/highcharts.html?ticker=" + chartdata[0] + "&symbol=" + companyjson.get("ticker").getAsString());
 
 
-            // Stats section
+//            // Stats section
 //            TextView currentPriceView = findViewById(R.id.currentPrice);
 //            TextView lowView = findViewById(R.id.low);
 //            TextView bidPriceView = findViewById(R.id.bidPrice);
@@ -334,6 +365,21 @@ public class Detail extends AppCompatActivity {
             aboutmore.setText(companyjson.get("description").getAsString());
             aboutmore.setVisibility(View.GONE);
             findViewById(R.id.showless).setVisibility(View.GONE);
+
+            // News section
+            JsonArray articles = newsjson.get("articles").getAsJsonArray();
+
+            // First news card
+            ImageView firstImage = findViewById(R.id.firstnewspicture);
+            Glide.with(firstImage).load(articles.get(0).getAsJsonObject().get("urlToImage").getAsString()).into(firstImage);
+            firstImage.setClipToOutline(true);
+            TextView firstSource = findViewById(R.id.firstnewssource);
+            firstSource.setText(articles.get(0).getAsJsonObject().get("source").getAsJsonObject().get("name").getAsString());
+            TextView firstStamp = findViewById(R.id.firstnewstimestamp);
+            String newsStamp = articles.get(0).getAsJsonObject().get("publishedAt").getAsString();
+            firstStamp.setText(getTimeGap(newsStamp));
+            TextView firstHeader = findViewById(R.id.firstnewsheader);
+            firstHeader.setText(articles.get(0).getAsJsonObject().get("title").getAsString());
 
             //Remove progress bar
             findViewById(R.id.alldetails).setVisibility(View.VISIBLE);
@@ -421,6 +467,32 @@ public class Detail extends AppCompatActivity {
         findViewById(R.id.showmore).setVisibility(View.VISIBLE);
         findViewById(R.id.aboutless).setVisibility(View.VISIBLE);
         findViewById(R.id.showless).setVisibility(View.GONE);
+    }
+
+    public String getTimeGap (String newsStamp){
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+
+        try{
+            long t1 = sdf.parse(newsStamp).getTime();
+            long t2 = timestamp.getTime();
+            long diff = t2 - t1;
+
+            long diff_In_minutes = Math.round(diff / (1000*60));
+            long diff_In_days = Math.round(diff/(1000*60*60*24));
+
+            if(diff_In_days>0){
+                return String.format("%d days ago", diff_In_days);
+            }else{
+                return String.format("%d minutes ago", diff_In_minutes);
+            }
+
+        }
+        catch (ParseException e) {
+            e.printStackTrace();
+            return "Parsing error";
+        }
+
     }
 
 }
