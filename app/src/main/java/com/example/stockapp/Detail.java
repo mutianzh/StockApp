@@ -3,16 +3,19 @@ package com.example.stockapp;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.cardview.widget.CardView;
 import androidx.core.widget.NestedScrollView;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import android.app.AlarmManager;
+import android.app.Dialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.Resources;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -38,6 +41,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
+
+import org.w3c.dom.Text;
 
 import java.sql.Timestamp;
 import java.text.DecimalFormat;
@@ -384,6 +389,64 @@ public class Detail extends AppCompatActivity {
             TextView firstHeader = findViewById(R.id.firstnewsheader);
             firstHeader.setText(articles.get(0).getAsJsonObject().get("title").getAsString());
 
+            CardView firstcard = findViewById(R.id.firstcard);
+            firstcard.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(articles.get(0).getAsJsonObject().get("url").getAsString()));
+                    startActivity(browserIntent);
+                }
+            });
+
+            final Context context = this;
+
+            firstcard.setOnLongClickListener(new View.OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View v) {
+
+                    //Set dialog contents
+                    Dialog firstNewsDialog = new Dialog(context);
+                    if (!articles.get(0).getAsJsonObject().get("urlToImage").isJsonNull()){
+
+                        firstNewsDialog.setContentView(R.layout.news_dialog);
+                        ImageView dialog_pic_first = firstNewsDialog.findViewById(R.id.dialog_pic_first);
+                        Glide.with(dialog_pic_first).load(articles.get(0).getAsJsonObject().get("urlToImage").getAsString()).into(dialog_pic_first);
+                        dialog_pic_first.setClipToOutline(true);
+                    }
+
+                    TextView dialog_title = firstNewsDialog.findViewById(R.id.dialog_title);
+                    dialog_title.setText(articles.get(0).getAsJsonObject().get("title").getAsString());
+
+                    ImageView twitter = firstNewsDialog.findViewById(R.id.twitter);
+                    twitter.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            String url = String.format("https://twitter.com/intent/tweet?url=%s", articles.get(0).getAsJsonObject().get("url").getAsString());
+                            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                            startActivity(browserIntent);
+                        }
+                    });
+
+                    ImageView chrome = firstNewsDialog.findViewById(R.id.chrome);
+                    chrome.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(articles.get(0).getAsJsonObject().get("url").getAsString()));
+                            startActivity(browserIntent);
+                        }
+                    });
+
+
+                    firstNewsDialog.show();
+
+                    return true;
+                }
+            });
+
+
+
+
+
             //Remove progress bar
             findViewById(R.id.alldetails).setVisibility(View.VISIBLE);
             findViewById(R.id.progressbar).setVisibility(View.GONE);
@@ -456,6 +519,8 @@ public class Detail extends AppCompatActivity {
             highView.setText(highText);
             volumeView.setText(volumeText);
 
+
+
         }
     }
 
@@ -471,6 +536,7 @@ public class Detail extends AppCompatActivity {
         findViewById(R.id.aboutless).setVisibility(View.VISIBLE);
         findViewById(R.id.showless).setVisibility(View.GONE);
     }
+
 
     public String getTimeGap (String newsStamp){
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
