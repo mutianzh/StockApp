@@ -6,6 +6,8 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.cardview.widget.CardView;
 import androidx.core.widget.NestedScrollView;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.app.AlarmManager;
 import android.app.Dialog;
@@ -116,7 +118,7 @@ public class Detail extends AppCompatActivity {
     public void getPriceData (String quote) {
         RequestQueue queue = Volley.newRequestQueue(this);
         String ticker = quote.split("-")[0];
-        String getpriceurl = "http://nodejsapp-env.eba-9tz487ps.us-east-1.elasticbeanstalk.com/debug?arg1="+ticker;
+        String getpriceurl = "http://nodejsapp-env.eba-9tz487ps.us-east-1.elasticbeanstalk.com/price?arg1="+ticker;
 
         final String[] pricedata = new String[1];
         StringRequest request1 = new StringRequest(Request.Method.GET, getpriceurl, new Response.Listener<String>() {
@@ -140,7 +142,7 @@ public class Detail extends AppCompatActivity {
         RequestQueue queue = Volley.newRequestQueue(this);
         String ticker = quote.split("-")[0];
 
-        String getpriceurl = "http://nodejsapp-env.eba-9tz487ps.us-east-1.elasticbeanstalk.com/debug?arg1="+ticker;
+        String getpriceurl = "http://nodejsapp-env.eba-9tz487ps.us-east-1.elasticbeanstalk.com/price?arg1="+ticker;
         String getcompanyurl = "http://nodejsapp-env.eba-9tz487ps.us-east-1.elasticbeanstalk.com/company?arg1="+ticker;
         String getcharturl = "http://nodejsapp-env.eba-9tz487ps.us-east-1.elasticbeanstalk.com/year?arg1="+ticker;
         String getnewsurl = "http://nodejsapp-env.eba-9tz487ps.us-east-1.elasticbeanstalk.com/news?arg1="+ticker;
@@ -374,78 +376,96 @@ public class Detail extends AppCompatActivity {
             // News section
             JsonArray articles = newsjson.get("articles").getAsJsonArray();
 
-            // First news card
-            if (!articles.get(0).getAsJsonObject().get("urlToImage").isJsonNull()){
-                ImageView firstImage = findViewById(R.id.firstnewspicture);
-                Glide.with(firstImage).load(articles.get(0).getAsJsonObject().get("urlToImage").getAsString()).into(firstImage);
-                firstImage.setClipToOutline(true);
-            }
-
-            TextView firstSource = findViewById(R.id.firstnewssource);
-            firstSource.setText(articles.get(0).getAsJsonObject().get("source").getAsJsonObject().get("name").getAsString());
-            TextView firstStamp = findViewById(R.id.firstnewstimestamp);
-            String newsStamp = articles.get(0).getAsJsonObject().get("publishedAt").getAsString();
-            firstStamp.setText(getTimeGap(newsStamp));
-            TextView firstHeader = findViewById(R.id.firstnewsheader);
-            firstHeader.setText(articles.get(0).getAsJsonObject().get("title").getAsString());
-
-            CardView firstcard = findViewById(R.id.firstcard);
-            firstcard.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(articles.get(0).getAsJsonObject().get("url").getAsString()));
-                    startActivity(browserIntent);
+            if (articles.size() > 0){
+                // First news card
+                if (!articles.get(0).getAsJsonObject().get("urlToImage").isJsonNull()){
+                    ImageView firstImage = findViewById(R.id.firstnewspicture);
+                    Glide.with(firstImage).load(articles.get(0).getAsJsonObject().get("urlToImage").getAsString()).into(firstImage);
+                    firstImage.setClipToOutline(true);
                 }
-            });
 
-            final Context context = this;
+                TextView firstSource = findViewById(R.id.firstnewssource);
+                firstSource.setText(articles.get(0).getAsJsonObject().get("source").getAsJsonObject().get("name").getAsString());
+                TextView firstStamp = findViewById(R.id.firstnewstimestamp);
+                String newsStamp = articles.get(0).getAsJsonObject().get("publishedAt").getAsString();
+                firstStamp.setText(getTimeGap(newsStamp));
+                TextView firstHeader = findViewById(R.id.firstnewsheader);
+                firstHeader.setText(articles.get(0).getAsJsonObject().get("title").getAsString());
 
-            firstcard.setOnLongClickListener(new View.OnLongClickListener() {
-                @Override
-                public boolean onLongClick(View v) {
+                CardView firstcard = findViewById(R.id.firstcard);
+                firstcard.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(articles.get(0).getAsJsonObject().get("url").getAsString()));
+                        startActivity(browserIntent);
+                    }
+                });
 
-                    //Set dialog contents
-                    Dialog firstNewsDialog = new Dialog(context);
-                    if (!articles.get(0).getAsJsonObject().get("urlToImage").isJsonNull()){
+                final Context context = this;
 
-                        firstNewsDialog.setContentView(R.layout.news_dialog);
-                        ImageView dialog_pic_first = firstNewsDialog.findViewById(R.id.dialog_pic_first);
-                        Glide.with(dialog_pic_first).load(articles.get(0).getAsJsonObject().get("urlToImage").getAsString()).into(dialog_pic_first);
-                        dialog_pic_first.setClipToOutline(true);
+                firstcard.setOnLongClickListener(new View.OnLongClickListener() {
+                    @Override
+                    public boolean onLongClick(View v) {
+                        newsDialog(articles.get(0).getAsJsonObject());
+
+                        return true;
+                    }
+                });
+                // Remaining News cards
+                if(articles.size() > 1){
+                    ArrayList<NewsCardItem> newsCardList = new ArrayList<>();
+
+                    for(int i=1; i < articles.size(); i++){
+                        if (!articles.get(i).getAsJsonObject().get("urlToImage").isJsonNull()){
+                            newsCardList.add(new NewsCardItem(articles.get(i).getAsJsonObject().get("urlToImage").getAsString(),
+                                    articles.get(i).getAsJsonObject().get("source").getAsJsonObject().get("name").getAsString(),
+                                    getTimeGap(articles.get(i).getAsJsonObject().get("publishedAt").getAsString()),
+                                    articles.get(i).getAsJsonObject().get("title").getAsString()
+                            ));
+                        }else{
+                            newsCardList.add(new NewsCardItem("null",
+                                    articles.get(i).getAsJsonObject().get("source").getAsJsonObject().get("name").getAsString(),
+                                    getTimeGap(articles.get(i).getAsJsonObject().get("publishedAt").getAsString()),
+                                    articles.get(i).getAsJsonObject().get("title").getAsString()
+                            ));
+                        }
+
                     }
 
-                    TextView dialog_title = firstNewsDialog.findViewById(R.id.dialog_title);
-                    dialog_title.setText(articles.get(0).getAsJsonObject().get("title").getAsString());
 
-                    ImageView twitter = firstNewsDialog.findViewById(R.id.twitter);
-                    twitter.setOnClickListener(new View.OnClickListener() {
+                    RecyclerView mRecyclerView = findViewById(R.id.newsrecyclerview);
+                    mRecyclerView.setHasFixedSize(true);
+                    NewsCardAdapter mAdapter = new NewsCardAdapter(newsCardList);
+                    RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(this);
+
+                    mRecyclerView.setLayoutManager(mLayoutManager);
+                    mRecyclerView.setAdapter(mAdapter);
+
+                    mAdapter.setOnItemClickListener(new NewsCardAdapter.OnItemClickListener() {
                         @Override
-                        public void onClick(View v) {
-                            String url = String.format("https://twitter.com/intent/tweet?url=%s", articles.get(0).getAsJsonObject().get("url").getAsString());
-                            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                        public void onItemClick(int position) {
+                            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(articles.get(position+1).getAsJsonObject().get("url").getAsString()));
                             startActivity(browserIntent);
                         }
                     });
 
-                    ImageView chrome = firstNewsDialog.findViewById(R.id.chrome);
-                    chrome.setOnClickListener(new View.OnClickListener() {
+                    mAdapter.setOnItemLongClickListener(new NewsCardAdapter.OnItemLongClickListener() {
                         @Override
-                        public void onClick(View v) {
-                            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(articles.get(0).getAsJsonObject().get("url").getAsString()));
-                            startActivity(browserIntent);
+                        public void onItemLongClick(int position) {
+                            newsDialog(articles.get(position+1).getAsJsonObject());
+
                         }
                     });
 
-
-                    firstNewsDialog.show();
-
-                    return true;
+                }else{
+                    findViewById(R.id.newsrecyclerview).setVisibility(View.GONE);
                 }
-            });
+            }
+            else{
+                findViewById(R.id.firstcard).setVisibility(View.GONE);
+                findViewById(R.id.newsrecyclerview).setVisibility(View.GONE);
 
-
-
-
+            }
 
             //Remove progress bar
             findViewById(R.id.alldetails).setVisibility(View.VISIBLE);
@@ -477,9 +497,9 @@ public class Detail extends AppCompatActivity {
             changeView.setText(changeText);
 
             if (changeValueDouble < 0) {
-                changeView.setTextColor(Color.RED);
+                changeView.setTextColor(resources.getColor(R.color.downTrend));
             } else if (changeValueDouble > 0) {
-                changeView.setTextColor(Color.GREEN);
+                changeView.setTextColor(resources.getColor(R.color.upTrend));
             } else {
                 changeView.setTextColor(Color.BLACK);
             }
@@ -563,5 +583,43 @@ public class Detail extends AppCompatActivity {
         }
 
     }
+
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    public void newsDialog(JsonObject newsItem){
+        //Set dialog contents
+        Dialog firstNewsDialog = new Dialog(Detail.this);
+        firstNewsDialog.setContentView(R.layout.news_dialog);
+
+        if (!newsItem.get("urlToImage").isJsonNull()){
+            ImageView dialog_pic_first = firstNewsDialog.findViewById(R.id.dialog_pic_first);
+            Glide.with(dialog_pic_first).load(newsItem.get("urlToImage").getAsString()).into(dialog_pic_first);
+            dialog_pic_first.setClipToOutline(true);
+        }
+
+        TextView dialog_title = firstNewsDialog.findViewById(R.id.dialog_title);
+        dialog_title.setText(newsItem.get("title").getAsString());
+
+        ImageView twitter = firstNewsDialog.findViewById(R.id.twitter);
+        twitter.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String url = String.format("https://twitter.com/intent/tweet?url=%s", newsItem.get("url").getAsString());
+                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                startActivity(browserIntent);
+            }
+        });
+
+        ImageView chrome = firstNewsDialog.findViewById(R.id.chrome);
+        chrome.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(newsItem.get("url").getAsString()));
+                startActivity(browserIntent);
+            }
+        });
+        firstNewsDialog.show();
+
+    }
+
 
 }
