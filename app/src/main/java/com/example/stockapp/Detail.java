@@ -1,5 +1,6 @@
 package com.example.stockapp;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -15,12 +16,15 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
 import android.webkit.WebView;
@@ -52,6 +56,8 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
 public class Detail extends AppCompatActivity {
 
@@ -62,6 +68,13 @@ public class Detail extends AppCompatActivity {
 //    String portfolio_message;
 //    public int pendingrequests = 4;
 //    RequestQueue queue;
+    private Menu mOptionsMenu;
+
+    private String TICKER;
+
+    public static final String SHARED_PREFS = "sharedPrefs";
+    public static final String FAVORITE_LIST="favoriteList";
+    public static final String PORTFOLIO_LIST = "portfolioList";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,6 +90,7 @@ public class Detail extends AppCompatActivity {
         // Get search quote
         Intent intent = getIntent();
         String quote = intent.getStringExtra(MainActivity.EXTRA_MESSAGE);
+        TICKER = quote;
 
         TextView textView = findViewById(R.id.textView);
         textView.setText(quote);
@@ -111,7 +125,43 @@ public class Detail extends AppCompatActivity {
             }
         }, delay);
 
+    }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        //Inflate the search menu action bar
+        getMenuInflater().inflate(R.menu.detail_menu, menu);
+        mOptionsMenu = menu;
+
+        MenuItem star_border = menu.findItem(R.id.action_favorite);
+        star_border.setVisible(false);
+
+        MenuItem star = menu.findItem(R.id.action_unfavorite);
+        star.setVisible(false);
+
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        switch (item.getItemId()){
+            case R.id.action_favorite:
+                mOptionsMenu.findItem(R.id.action_favorite).setVisible(false);
+                mOptionsMenu.findItem(R.id.action_unfavorite).setVisible(true);
+                addFavorite(TICKER);
+
+                return true;
+
+            case R.id.action_unfavorite:
+                mOptionsMenu.findItem(R.id.action_favorite).setVisible(true);
+                mOptionsMenu.findItem(R.id.action_unfavorite).setVisible(false);
+                removeFavorite(TICKER);
+
+                return true;
+
+            default:
+                return super.onOptionsItemSelected(item);
+        }
 
     }
 
@@ -267,26 +317,9 @@ public class Detail extends AppCompatActivity {
             TextView ticker = findViewById(R.id.ticker);
             ticker.setText(companyjson.get("ticker").getAsString());
 
-//            TextView price = findViewById(R.id.price);
-//            Resources resources = getResources();
-//            String priceText = String.format(resources.getString(R.string.priceString), pricejson.get(0).getAsJsonObject().get("last").getAsString());
-//            price.setText(priceText);
-
-
             TextView name = findViewById(R.id.name);
             name.setText(companyjson.get("name").getAsString());
 
-//            TextView change = findViewById(R.id.change);
-//            double changeindouble = pricejson.get(0).getAsJsonObject().get("last").getAsDouble() -
-//                    pricejson.get(0).getAsJsonObject().get("prevClose").getAsDouble();
-//            change.setText("$"+df2.format(changeindouble));
-//            if (changeindouble < 0){
-//                change.setTextColor(Color.RED);
-//            }else if(changeindouble > 0){
-//                change.setTextColor(Color.GREEN);
-//            }else{
-//                change.setTextColor(Color.BLACK);
-//            }
 
             updatePrices(pricedata);
 
@@ -295,74 +328,6 @@ public class Detail extends AppCompatActivity {
             webview.getSettings().setJavaScriptEnabled(true);
             //webview.loadUrl("file:///android_asset/highcharts.html?ticker="+companyjson.get("ticker").getAsString());
             webview.loadUrl("file:///android_asset/highcharts.html?ticker=" + chartdata[0] + "&symbol=" + companyjson.get("ticker").getAsString());
-
-
-//            // Stats section
-//            TextView currentPriceView = findViewById(R.id.currentPrice);
-//            TextView lowView = findViewById(R.id.low);
-//            TextView bidPriceView = findViewById(R.id.bidPrice);
-//            TextView openPriceView = findViewById(R.id.openPrice);
-//            TextView midView = findViewById(R.id.mid);
-//            TextView highView = findViewById(R.id.high);
-//            TextView volumeView = findViewById(R.id.volume);
-//
-//            String currentPriceText = String.format(resources.getString(R.string.currentPriceString), pricejson.get(0).getAsJsonObject().get("last").getAsString());
-//            String lowText = String.format(resources.getString(R.string.lowString), pricejson.get(0).getAsJsonObject().get("low").getAsString());
-//            String bidPriceText;
-//            if (pricejson.get(0).getAsJsonObject().get("bidPrice").isJsonNull()) {
-//                bidPriceText = String.format(resources.getString(R.string.bidPriceString), "NA");
-//            } else {
-//                bidPriceText = String.format(resources.getString(R.string.bidPriceString), pricejson.get(0).getAsJsonObject().get("bidPrice").getAsString());
-//            }
-//
-//            String openPriceText = String.format(resources.getString(R.string.openPriceString), pricejson.get(0).getAsJsonObject().get("open").getAsString());
-//
-//            String midText;
-//            if (pricejson.get(0).getAsJsonObject().get("mid").isJsonNull()) {
-//                midText = String.format(resources.getString(R.string.midString), "NA");
-//            } else {
-//                midText = String.format(resources.getString(R.string.midString), pricejson.get(0).getAsJsonObject().get("mid").getAsString());
-//            }
-//            String highText = String.format(resources.getString(R.string.highString), pricejson.get(0).getAsJsonObject().get("high").getAsString());
-//            String volumeText = String.format(resources.getString(R.string.volumeString), pricejson.get(0).getAsJsonObject().get("volume").getAsString());
-//
-//            currentPriceView.setText(currentPriceText);
-//            lowView.setText(lowText);
-//            bidPriceView.setText(bidPriceText);
-//            openPriceView.setText(openPriceText);
-//            midView.setText(midText);
-//            highView.setText(highText);
-//            volumeView.setText(volumeText);
-
-//            ArrayList<String> gridviewvalues = new ArrayList<String>();
-//            ArrayList<String> gridviewvalues2 = new ArrayList<String>();
-//            ArrayList<String> gridviewvalues3 = new ArrayList<String>();
-//
-//            gridviewvalues.add("Current price: " + pricejson.get(0).getAsJsonObject().get("last").getAsString());
-//            gridviewvalues.add("Low: " + pricejson.get(0).getAsJsonObject().get("low").getAsString());
-//            if (!pricejson.get(0).getAsJsonObject().get("bidPrice").isJsonNull()){
-//                gridviewvalues.add("Bid Price: " + pricejson.get(0).getAsJsonObject().get("bidPrice").getAsString());
-//            }else{
-//                gridviewvalues.add("Bid Price: 0.0");
-//            }
-//            gridviewvalues2.add("Open price: " + pricejson.get(0).getAsJsonObject().get("open").getAsString());
-//            if (!pricejson.get(0).getAsJsonObject().get("mid").isJsonNull()){
-//                gridviewvalues2.add("Mid: " + pricejson.get(0).getAsJsonObject().get("mid").getAsString());
-//            }else{
-//                gridviewvalues2.add("Mid: 0.0");
-//            }
-//            gridviewvalues2.add("High: " + pricejson.get(0).getAsJsonObject().get("high").getAsString());
-//            gridviewvalues3.add("Volume: " + pricejson.get(0).getAsJsonObject().get("volume").getAsString());
-//
-//            ArrayAdapter<String> gridviewadapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, gridviewvalues);
-//            ArrayAdapter<String> gridviewadapter2 = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, gridviewvalues2);
-//            ArrayAdapter<String> gridviewadapter3 = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, gridviewvalues3);
-//            GridView gridView = findViewById(R.id.stats);
-//            GridView gridView2 = findViewById(R.id.stats2);
-//            GridView gridView3 = findViewById(R.id.stats3);
-//            gridView.setAdapter(gridviewadapter);
-//            gridView2.setAdapter(gridviewadapter2);
-//            gridView3.setAdapter(gridviewadapter3);
 
             // About section
             TextView aboutless = findViewById(R.id.aboutless);
@@ -471,6 +436,9 @@ public class Detail extends AppCompatActivity {
             findViewById(R.id.alldetails).setVisibility(View.VISIBLE);
             findViewById(R.id.progressbar).setVisibility(View.GONE);
             findViewById(R.id.errormessage).setVisibility(View.GONE);
+
+            //Display star icon
+            displayIcon();
 
 
         }
@@ -618,6 +586,51 @@ public class Detail extends AppCompatActivity {
             }
         });
         firstNewsDialog.show();
+
+    }
+
+    public void addFavorite(String ticker){
+
+
+
+        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
+        Set<String> set = sharedPreferences.getStringSet(FAVORITE_LIST, null);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        if (set == null){
+            set = new HashSet<String>();
+            set.add(ticker);
+        }else{
+            set.add(ticker);
+        }
+        editor.putStringSet(FAVORITE_LIST, set);
+        editor.apply();
+    }
+
+    public void removeFavorite(String ticker){
+        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        Set<String> set = sharedPreferences.getStringSet(FAVORITE_LIST, null);
+        set.remove(ticker);
+        editor.putStringSet(FAVORITE_LIST, set);
+        editor.apply();
+    }
+
+    public void displayIcon(){
+        MenuItem star_border = mOptionsMenu.findItem(R.id.action_favorite);
+        MenuItem star = mOptionsMenu.findItem(R.id.action_unfavorite);
+
+        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
+        Set<String> set = sharedPreferences.getStringSet(FAVORITE_LIST, null);
+        if(set == null){
+            star_border.setVisible(true);
+            star.setVisible(false);
+        }else if (set.contains(TICKER)){
+            star_border.setVisible(false);
+            star.setVisible(true);
+        }else{
+            star_border.setVisible(true);
+            star.setVisible(false);
+        }
 
     }
 
