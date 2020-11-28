@@ -8,6 +8,7 @@ import androidx.appcompat.widget.Toolbar;
 import android.annotation.SuppressLint;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.Menu;
@@ -16,6 +17,7 @@ import android.view.View;
 import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Toast;
 
 
 import com.android.volley.Request;
@@ -33,6 +35,8 @@ import com.google.gson.JsonParser;
 
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -40,6 +44,11 @@ public class MainActivity extends AppCompatActivity {
     RequestQueue queue;
     ArrayList<String> suggestions = new ArrayList<String>();
     public static final String EXTRA_MESSAGE = "com.example.stockapp.MESSAGE";
+
+    public static final String SHARED_PREFS = "sharedPrefs";
+    public static final String FAVORITE_LIST="favoriteList";
+    public static final String PORTFOLIO_LIST = "portfolioList";
+    public static final String CASH = "cash";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,6 +60,8 @@ public class MainActivity extends AppCompatActivity {
         Toolbar myToolbar = (Toolbar) findViewById(R.id.myToolBar);
         setSupportActionBar(myToolbar);
         myToolbar.setTitleTextAppearance(this, R.style.BoldTextAppearance);
+
+        //resetcash();
 
     }
 
@@ -111,10 +122,7 @@ public class MainActivity extends AppCompatActivity {
         return super.onCreateOptionsMenu(menu);
     }
 
-
-
-
-    private void getSuggestions(String newText, SearchView.SearchAutoComplete searchAutoComplete) {
+    public void getSuggestions(String newText, SearchView.SearchAutoComplete searchAutoComplete) {
         suggestions = new ArrayList<String>();
         String url = "http://nodejsapp-env.eba-9tz487ps.us-east-1.elasticbeanstalk.com/autocomplete?arg1="+newText;
 
@@ -150,6 +158,14 @@ public class MainActivity extends AppCompatActivity {
 
 
         queue.add(request);
+
+    }
+
+    public void resetcash(){
+        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString(CASH, "20000");
+        editor.apply();
 
     }
 

@@ -171,6 +171,7 @@
                         android:background="@drawable/roundedbutton"
                         android:text="Trade"
                         android:textColor="@color/white"
+                        android:onClick="tradeDialog"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintTop_toTopOf="parent"

@@ -23,17 +23,22 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
 import android.webkit.WebView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -61,20 +66,22 @@ import java.util.Set;
 
 public class Detail extends AppCompatActivity {
 
-//    String ticker;
-//    String name;
-//    String currentprice;
-//    String change;
-//    String portfolio_message;
-//    public int pendingrequests = 4;
-//    RequestQueue queue;
+
+    private JsonArray pricejson;
+    private JsonObject companyjson;
+    private JsonArray chartjson;
+    private JsonObject newsjson;
+
     private Menu mOptionsMenu;
 
     private String TICKER;
+    private int pendingrequests = 4;
 
-    public static final String SHARED_PREFS = "sharedPrefs";
-    public static final String FAVORITE_LIST="favoriteList";
-    public static final String PORTFOLIO_LIST = "portfolioList";
+    private String SHARED_PREFS = MainActivity.SHARED_PREFS;
+    private String FAVORITE_LIST= MainActivity.FAVORITE_LIST;
+    private String PORTFOLIO_LIST = MainActivity.PORTFOLIO_LIST;
+    private String CASH = MainActivity.CASH;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -90,7 +97,6 @@ public class Detail extends AppCompatActivity {
         // Get search quote
         Intent intent = getIntent();
         String quote = intent.getStringExtra(MainActivity.EXTRA_MESSAGE);
-        TICKER = quote;
 
         TextView textView = findViewById(R.id.textView);
         textView.setText(quote);
@@ -133,14 +139,37 @@ public class Detail extends AppCompatActivity {
         getMenuInflater().inflate(R.menu.detail_menu, menu);
         mOptionsMenu = menu;
 
-        MenuItem star_border = menu.findItem(R.id.action_favorite);
-        star_border.setVisible(false);
-
-        MenuItem star = menu.findItem(R.id.action_unfavorite);
-        star.setVisible(false);
-
         return super.onCreateOptionsMenu(menu);
     }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu){
+        MenuItem star_border = menu.findItem(R.id.action_favorite);
+        MenuItem star = menu.findItem(R.id.action_unfavorite);
+
+        if (pendingrequests == 0){
+            SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
+            Set<String> set = sharedPreferences.getStringSet(FAVORITE_LIST, null);
+            if(set == null){
+                star_border.setVisible(true);
+                star.setVisible(false);
+            }else if (set.contains(TICKER)){
+                star_border.setVisible(false);
+                star.setVisible(true);
+            }else{
+                star_border.setVisible(true);
+                star.setVisible(false);
+            }
+        }else{
+            star_border.setVisible(false);
+            star.setVisible(false);
+        }
+
+
+
+        return super.onPrepareOptionsMenu(menu);
+    }
+
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
@@ -190,7 +219,8 @@ public class Detail extends AppCompatActivity {
 
     private void getData(String quote){
         RequestQueue queue = Volley.newRequestQueue(this);
-        String ticker = quote.split("-")[0];
+        String ticker = quote.split("-")[0].replaceAll("\\s", "");
+        TICKER = ticker;
 
         String getpriceurl = "http://nodejsapp-env.eba-9tz487ps.us-east-1.elasticbeanstalk.com/price?arg1="+ticker;
         String getcompanyurl = "http://nodejsapp-env.eba-9tz487ps.us-east-1.elasticbeanstalk.com/company?arg1="+ticker;
@@ -202,8 +232,6 @@ public class Detail extends AppCompatActivity {
         final String[] chartdata = new String[1];
         final String[] newsdata = new String[1];
 
-        final int[] pendingrequests = {4};
-
         StringRequest request1 = new StringRequest(Request.Method.GET, getpriceurl, new Response.Listener<String>() {
             @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
             @Override
@@ -211,8 +239,9 @@ public class Detail extends AppCompatActivity {
 
                 pricedata[0] = response;
 
-                pendingrequests[0]--;
-                if (pendingrequests[0] == 0){
+                pendingrequests--;
+                if (pendingrequests == 0){
+                    supportInvalidateOptionsMenu();
                     updateviews(pricedata, companydata, chartdata, newsdata);
                 }
             }
@@ -229,8 +258,9 @@ public class Detail extends AppCompatActivity {
             public void onResponse(String response) {
 
                 companydata[0] = response;
-                pendingrequests[0]--;
-                if (pendingrequests[0] == 0){
+                pendingrequests--;
+                if (pendingrequests == 0){
+                    supportInvalidateOptionsMenu();
                     updateviews(pricedata, companydata, chartdata, newsdata);
                 }
             }
@@ -248,8 +278,9 @@ public class Detail extends AppCompatActivity {
             public void onResponse(String response) {
 
                 chartdata[0] = response;
-                pendingrequests[0]--;
-                if (pendingrequests[0] == 0){
+                pendingrequests--;
+                if (pendingrequests == 0){
+                    supportInvalidateOptionsMenu();
                     updateviews(pricedata, companydata, chartdata, newsdata);
                 }
             }
@@ -267,8 +298,9 @@ public class Detail extends AppCompatActivity {
             public void onResponse(String response) {
 
                 newsdata[0] = response;
-                pendingrequests[0]--;
-                if (pendingrequests[0] == 0){
+                pendingrequests--;
+                if (pendingrequests == 0){
+                    supportInvalidateOptionsMenu();
                     updateviews(pricedata, companydata, chartdata, newsdata);
                 }
             }
@@ -290,11 +322,6 @@ public class Detail extends AppCompatActivity {
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     private  void updateviews(String[] pricedata, String[] companydata, String[] chartdata, String[] newsdata){
-
-        JsonArray pricejson;
-        JsonObject companyjson;
-        JsonArray chartjson;
-        JsonObject newsjson;
 
         // Check error cases
         // Wrong ticker error
@@ -438,8 +465,11 @@ public class Detail extends AppCompatActivity {
             findViewById(R.id.errormessage).setVisibility(View.GONE);
 
             //Display star icon
-            displayIcon();
+            //displayIcon();
+            //supportInvalidateOptionsMenu();
 
+            //Display portfolio message
+            displayPortfolioMessage();
 
         }
 
@@ -507,8 +537,6 @@ public class Detail extends AppCompatActivity {
             highView.setText(highText);
             volumeView.setText(volumeText);
 
-
-
         }
     }
 
@@ -523,6 +551,76 @@ public class Detail extends AppCompatActivity {
         findViewById(R.id.showmore).setVisibility(View.VISIBLE);
         findViewById(R.id.aboutless).setVisibility(View.VISIBLE);
         findViewById(R.id.showless).setVisibility(View.GONE);
+    }
+
+    public void tradeDialog(View v){
+
+        //Set dialog contents
+        Dialog tradeDialog = new Dialog(Detail.this);
+        tradeDialog.setContentView(R.layout.trade_dialog);
+
+        //Set title
+        TextView trade_title = tradeDialog.findViewById(R.id.trade_title);
+        trade_title.setText(String.format("Trade %s shares", companyjson.get("name").getAsString()));
+
+        //Display cash left
+        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
+        String cash= sharedPreferences.getString(CASH,null);
+
+        TextView cash_available = tradeDialog.findViewById(R.id.cash_available);
+        cash_available.setText(String.format("$%s available to buy %s",cash,TICKER));
+
+        // Update dialog view dynamically
+        String last = pricejson.get(0).getAsJsonObject().get("last").getAsString();
+        double dlast = Double.parseDouble(last);
+
+        TextView totalCost = tradeDialog.findViewById(R.id.total_cost);
+        totalCost.setText(String.format("%s x $%s/share = $%.2f",0,last,dlast*0));
+
+        EditText editText = tradeDialog.findViewById(R.id.number_of_shares);
+        //editText.setText("0");
+        editText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                String input = s.toString();
+                double dnum = 0;
+                if (!s.toString().matches("")) {
+                    dnum = Double.parseDouble(s.toString());
+                }else{
+                    dnum = 0;
+                }
+                totalCost.setText(String.format("%s x $%s/share = $%.2f",dnum,last,dlast*dnum));
+            }
+            @Override
+            public void afterTextChanged(Editable s) {
+            }
+        });
+
+        // Purchase
+        Button buyButton = tradeDialog.findViewById(R.id.buybutton);
+        buyButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                buy();
+            }
+        });
+
+        // Sell
+        Button sellButton = tradeDialog.findViewById(R.id.sellbutton);
+        sellButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                sell();
+            }
+        });
+
+        tradeDialog.show();
+
     }
 
 
@@ -591,8 +689,6 @@ public class Detail extends AppCompatActivity {
 
     public void addFavorite(String ticker){
 
-
-
         SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
         Set<String> set = sharedPreferences.getStringSet(FAVORITE_LIST, null);
         SharedPreferences.Editor editor = sharedPreferences.edit();
@@ -604,6 +700,9 @@ public class Detail extends AppCompatActivity {
         }
         editor.putStringSet(FAVORITE_LIST, set);
         editor.apply();
+
+        Toast.makeText(Detail.this, String.format("\"%s\" was added to favorites", ticker),
+                Toast.LENGTH_LONG).show();
     }
 
     public void removeFavorite(String ticker){
@@ -613,6 +712,9 @@ public class Detail extends AppCompatActivity {
         set.remove(ticker);
         editor.putStringSet(FAVORITE_LIST, set);
         editor.apply();
+
+        Toast.makeText(Detail.this, String.format("\"%s\" was removed from favorites", ticker),
+                Toast.LENGTH_LONG).show();
     }
 
     public void displayIcon(){
@@ -634,5 +736,16 @@ public class Detail extends AppCompatActivity {
 
     }
 
+    public void displayPortfolioMessage(){
+        TextView message = findViewById(R.id.portfoliomessage);
+    }
+
+    public void buy(){
+
+    }
+
+    public void sell(){
+
+    }
 
 }
