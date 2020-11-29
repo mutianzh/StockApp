@@ -220,7 +220,6 @@ public class Detail extends AppCompatActivity {
     private void getData(String quote){
         RequestQueue queue = Volley.newRequestQueue(this);
         String ticker = quote.split("-")[0].replaceAll("\\s", "");
-        TICKER = ticker;
 
         String getpriceurl = "http://nodejsapp-env.eba-9tz487ps.us-east-1.elasticbeanstalk.com/price?arg1="+ticker;
         String getcompanyurl = "http://nodejsapp-env.eba-9tz487ps.us-east-1.elasticbeanstalk.com/company?arg1="+ticker;
@@ -343,6 +342,7 @@ public class Detail extends AppCompatActivity {
 
             TextView ticker = findViewById(R.id.ticker);
             ticker.setText(companyjson.get("ticker").getAsString());
+            TICKER = companyjson.get("ticker").getAsString();
 
             TextView name = findViewById(R.id.name);
             name.setText(companyjson.get("name").getAsString());
@@ -469,7 +469,7 @@ public class Detail extends AppCompatActivity {
             //supportInvalidateOptionsMenu();
 
             //Display portfolio message
-            displayPortfolioMessage();
+            updatePortfolioMessage();
 
         }
 
@@ -606,7 +606,15 @@ public class Detail extends AppCompatActivity {
         buyButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                buy();
+                boolean status = buy(editText.getText().toString(), dlast, cash);
+                if (status){
+                    // Purchase success
+                    // Dismiss dialog
+                    tradeDialog.dismiss();
+                    // Show success dialog
+                    String successMessage = String.format("You have successfully bought %s shares of %s", editText.getText(), TICKER);
+                    showSuccessDialog(successMessage);
+                }
             }
         });
 
@@ -615,11 +623,129 @@ public class Detail extends AppCompatActivity {
         sellButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                sell();
+                boolean status = sell(editText.getText().toString(), dlast,  cash);
+                if (status){
+                    // Sell success
+                    // Dismiss dialog
+                    tradeDialog.dismiss();
+                    // Show success dialog
+                    String successMessage = String.format("You have successfully sold %s shares of %s", editText.getText(), TICKER);
+                    showSuccessDialog(successMessage);
+                }
             }
         });
 
         tradeDialog.show();
+
+    }
+
+    public void showSuccessDialog(String message){
+        Dialog successDialog = new Dialog(Detail.this);
+        successDialog.setContentView(R.layout.success_dialog);
+
+        TextView messageView = successDialog.findViewById(R.id.success_message);
+        messageView.setText(message);
+
+        Button button = successDialog.findViewById(R.id.dismiss_button);
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                successDialog.dismiss();
+            }
+        });
+
+        successDialog.show();
+    }
+
+    public boolean buy(String amount, double price, String cash){
+        double damount = 0;
+        double dcash = Double.parseDouble(cash);
+        try{
+            damount = Double.parseDouble(amount);
+        } catch (Exception e){
+            Toast.makeText(Detail.this, "Please enter valid amount", Toast.LENGTH_LONG).show();
+            return false;
+        }
+
+        if (damount <= 0){
+            Toast.makeText(Detail.this, "Cannot buy less than zero shares", Toast.LENGTH_LONG).show();
+            return false;
+        }else if (damount * price > dcash ){
+            Toast.makeText(Detail.this, "Not enough money to buy", Toast.LENGTH_LONG).show();
+            return false;
+        }else{
+            // Update portfolio
+            // current amount = current amount + amount
+            SharedPreferences portfolioList = getSharedPreferences(PORTFOLIO_LIST, MODE_PRIVATE);
+            String currentAmount = portfolioList.getString(TICKER,null);
+            SharedPreferences.Editor editor1 = portfolioList.edit();
+            if (currentAmount == null){
+                // First time purchase
+                editor1.putString(TICKER, amount);
+            }else{
+                double dCurrentAmount = Double.parseDouble(currentAmount);
+                editor1.putString(TICKER, String.format("%.2f", dCurrentAmount+damount));
+            }
+            editor1.apply();
+
+            // Update cash left
+            // cash = cash - purchase amount * price
+            SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
+            SharedPreferences.Editor editor2 = sharedPreferences.edit();
+            editor2.putString(CASH, String.format("%.2f", dcash - damount * price));
+            editor2.apply();
+
+            // Update portfolio message
+            updatePortfolioMessage();
+
+            return true;
+        }
+
+    }
+
+    public boolean sell(String amount, double price, String cash){
+        double dcash = Double.parseDouble(cash);
+
+        SharedPreferences portfolioList = getSharedPreferences(PORTFOLIO_LIST, MODE_PRIVATE);
+        String currentAmount = portfolioList.getString(TICKER,null);
+        double dCurrentAmount = 0;
+        if (currentAmount != null){
+            dCurrentAmount = Double.parseDouble(currentAmount);
+        }
+        double damount = 0;
+
+        try{
+            damount = Double.parseDouble(amount);
+        } catch (Exception e){
+            Toast.makeText(Detail.this, "Please enter valid amount", Toast.LENGTH_LONG).show();
+            return false;
+        }
+
+        if (damount <= 0){
+            Toast.makeText(Detail.this, "Cannot sell less than zero shares", Toast.LENGTH_LONG).show();
+            return false;
+        }else if (damount > dCurrentAmount){
+            Toast.makeText(Detail.this, "Not enough shares to sell", Toast.LENGTH_LONG).show();
+            return false;
+        }else{
+            // Update portfolio
+            // current amount = current amount - amount
+            SharedPreferences.Editor editor1 = portfolioList.edit();
+            editor1.putString(TICKER, String.format("%.2f", dCurrentAmount-damount));
+            editor1.apply();
+
+            // Update cash left
+            // cash = cash + selling amount * price
+            SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
+            SharedPreferences.Editor editor2 = sharedPreferences.edit();
+            editor2.putString(CASH, String.format("%.2f", dcash + damount * price));
+            editor2.apply();
+
+            // Update portfolio message
+            updatePortfolioMessage();
+
+            return true;
+        }
 
     }
 
@@ -717,35 +843,45 @@ public class Detail extends AppCompatActivity {
                 Toast.LENGTH_LONG).show();
     }
 
-    public void displayIcon(){
-        MenuItem star_border = mOptionsMenu.findItem(R.id.action_favorite);
-        MenuItem star = mOptionsMenu.findItem(R.id.action_unfavorite);
+    public void updatePortfolioMessage(){
+        TextView message = findViewById(R.id.portfoliomessage);
 
-        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
-        Set<String> set = sharedPreferences.getStringSet(FAVORITE_LIST, null);
-        if(set == null){
-            star_border.setVisible(true);
-            star.setVisible(false);
-        }else if (set.contains(TICKER)){
-            star_border.setVisible(false);
-            star.setVisible(true);
-        }else{
-            star_border.setVisible(true);
-            star.setVisible(false);
+        SharedPreferences portfolioList = getSharedPreferences(PORTFOLIO_LIST, MODE_PRIVATE);
+        String currentAmount = portfolioList.getString(TICKER,null);
+
+        if (currentAmount == null){
+            message.setText(String.format("You have 0 shares of %s.\nStart trading!", TICKER));
+        } else{
+            double dCurrentAmount = Double.parseDouble(currentAmount);
+            if (dCurrentAmount == 0){
+                message.setText(String.format("You have 0 shares of %s.\nStart trading!", TICKER));
+            }else{
+                double dlast = Double.parseDouble(pricejson.get(0).getAsJsonObject().get("last").getAsString());
+                double dMarketValue = dCurrentAmount * dlast;
+                message.setText(String.format("Shares owned: %.2f,\nMarket Value: $%.2f", dCurrentAmount, dMarketValue));
+            }
         }
 
     }
 
-    public void displayPortfolioMessage(){
-        TextView message = findViewById(R.id.portfoliomessage);
-    }
+    //    public void displayIcon(){
+//        MenuItem star_border = mOptionsMenu.findItem(R.id.action_favorite);
+//        MenuItem star = mOptionsMenu.findItem(R.id.action_unfavorite);
+//
+//        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
+//        Set<String> set = sharedPreferences.getStringSet(FAVORITE_LIST, null);
+//        if(set == null){
+//            star_border.setVisible(true);
+//            star.setVisible(false);
+//        }else if (set.contains(TICKER)){
+//            star_border.setVisible(false);
+//            star.setVisible(true);
+//        }else{
+//            star_border.setVisible(true);
+//            star.setVisible(false);
+//        }
+//
+//    }
 
-    public void buy(){
-
-    }
-
-    public void sell(){
-
-    }
 
 }
