@@ -3,36 +3,38 @@ package com.example.stockapp;
 public class StockItem {
 
     private String ticker;
-    private String trending;
+    private String lastPrice;
     private String companyName;
-    private String change;
+    private Double change;
     private String numShares;
+    private String netWorth;
 
-    public StockItem(String ticker, String trending, String companyName, String change, String numShares) {
+    public StockItem(String ticker, String lastPrice, String companyName, Double change, String numShares, String netWorth) {
         this.ticker = ticker;
-        this.trending = trending;
+        this.lastPrice = lastPrice;
         this.companyName = companyName;
         this.change = change;
         this.numShares = numShares;
+        this.netWorth = netWorth;
     }
 
     public String getTicker() {
         return ticker;
     }
 
-    public String getTrending() {
-        return trending;
-    }
+    public String getLastPrice() {return lastPrice;}
 
     public String getCompanyName() {
         return companyName;
     }
 
-    public String getChange() {
+    public Double getChange() {
         return change;
     }
 
     public String getNumShares() {
         return numShares;
     }
+
+    public String getNetWorth() {return netWorth;}
 }

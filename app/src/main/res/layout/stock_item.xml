@@ -6,6 +6,12 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:background="#e1e3e5"
+        app:layout_constraintTop_toTopOf="parent" />
+
     <TextView
         android:id="@+id/netWorth"
         android:layout_width="wrap_content"
@@ -24,6 +30,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="10dp"
         android:layout_marginLeft="10dp"
+        android:layout_marginTop="5dp"
         android:text="MSFT"
         android:textColor="@color/black"
         android:textSize="20sp"
@@ -38,7 +45,9 @@
         android:layout_marginStart="10dp"
         android:layout_marginLeft="10dp"
         android:layout_marginTop="4dp"
+        android:layout_marginBottom="5dp"
         android:text="8.0 shares"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/ticker" />
 
@@ -59,7 +68,6 @@
         android:layout_height="18dp"
         android:layout_marginEnd="0dp"
         android:layout_marginRight="0dp"
-        android:src="@drawable/ic_baseline_trending_down_24"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/change" />
 

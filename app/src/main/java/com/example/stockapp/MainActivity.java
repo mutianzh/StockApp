@@ -5,6 +5,9 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
 import androidx.appcompat.widget.Toolbar;
+import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.annotation.SuppressLint;
 
@@ -18,6 +21,7 @@ import android.view.View;
 import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.TextView;
 import android.widget.Toast;
 
 
@@ -35,11 +39,15 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+
+import io.github.luizgrp.sectionedrecyclerviewadapter.SectionedRecyclerViewAdapter;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -55,12 +63,13 @@ public class MainActivity extends AppCompatActivity {
     public static final String FAVORITE_LIST="favoriteList";
     public static final String PORTFOLIO_LIST = "portfolioList";
 
+    Map<String,?> portfolioList;
+    Map<String,?> favoriteList;
+
     private HashMap<String, Double> lastPrice = new HashMap<String, Double>();
-    private HashMap<String, Double> change = new HashMap<String, Double>();
+    private HashMap<String, Double> changeInPrice = new HashMap<String, Double>();
     private HashMap<String, String> numShares = new HashMap<String, String>();
     private HashMap<String, String> companyName = new HashMap<String, String>();
-
-    private JsonArray priceJson;
 
 
     @Override
@@ -118,9 +127,6 @@ public class MainActivity extends AppCompatActivity {
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
-//                AlertDialog alertDialog = new AlertDialog.Builder(MainActivity.this).create();
-//                alertDialog.setMessage("Search keyword is " + query);
-//                alertDialog.show();
                 Intent intent = new Intent(MainActivity.this, Detail.class);
                 String message = query;
                 intent.putExtra(EXTRA_MESSAGE, message);
@@ -187,9 +193,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void getData(){
-        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
-        Map<String,?> portfolioList = getSharedPreferences(PORTFOLIO_LIST, MODE_PRIVATE).getAll();
-        Map<String,?> favoriteList = getSharedPreferences(FAVORITE_LIST, MODE_PRIVATE).getAll();
+//        Map<String,?> portfolioList = getSharedPreferences(PORTFOLIO_LIST, MODE_PRIVATE).getAll();
+//        Map<String,?> favoriteList = getSharedPreferences(FAVORITE_LIST, MODE_PRIVATE).getAll();
+
+        portfolioList = getSharedPreferences(PORTFOLIO_LIST, MODE_PRIVATE).getAll();
+        favoriteList = getSharedPreferences(FAVORITE_LIST, MODE_PRIVATE).getAll();
 
         StringBuilder tickerSet = new StringBuilder();
 
@@ -209,7 +217,18 @@ public class MainActivity extends AppCompatActivity {
             @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
             @Override
             public void onResponse(String response) {
-                priceJson = JsonParser.parseString(response).getAsJsonArray();
+                JsonArray priceJson = JsonParser.parseString(response).getAsJsonArray();
+
+                for(JsonElement jsonElement: priceJson){
+                    JsonObject jsonObject = jsonElement.getAsJsonObject();
+                    double prevClose = jsonObject.get("prevClose").getAsDouble();
+                    double last = jsonObject.get("last").getAsDouble();
+                    double change = last - prevClose;
+                    changeInPrice.put(jsonObject.get("ticker").getAsString(), change);
+                    lastPrice.put(jsonObject.get("ticker").getAsString(), last);
+
+                }
+
                 updateViews();
             }
         }, new Response.ErrorListener() {
@@ -222,8 +241,69 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void updateViews(){
+        // Update date
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("MMMM dd, yyyy");
+        Calendar calendar = Calendar.getInstance();
+        String date = simpleDateFormat.format(calendar.getTime());
+        TextView dateView = findViewById(R.id.date);
+        dateView.setText(date);
 
+        // Add portfolio items
+        ArrayList<StockItem> portfolioItemList = new ArrayList<>();
 
+        // Calculate current net worth
+        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
+        String cash = sharedPreferences.getString(CASH, null);
+        double dnetWorth = 0;
+        try {
+            dnetWorth = Double.parseDouble(cash);
+        } catch (Exception e){
+            dnetWorth = 0;
+        }
+
+        for (Map.Entry <String, ?> entry: portfolioList.entrySet()){
+            double price = lastPrice.get(entry.getKey());
+            double shareAmount = Double.parseDouble(numShares.get(entry.getKey()));
+            dnetWorth += price * shareAmount;
+        }
+        // Add a dummy section for net worth value
+        portfolioItemList.add(new StockItem(null, null, null, null, null, String.format("%.2f", dnetWorth)));
+
+        // Add portfolio items
+        for (Map.Entry <String, ?> entry: portfolioList.entrySet()){
+            String ticker = entry.getKey();
+            portfolioItemList.add(new StockItem(ticker,
+                    String.format("%.2f",lastPrice.get(ticker)),
+                    companyName.get(ticker),
+                    changeInPrice.get(ticker),
+                    numShares.get(ticker),
+                    null));
+        }
+
+        // Add favorite items
+        ArrayList<StockItem> favoriteItemList = new ArrayList<>();
+        for (Map.Entry <String, ?> entry: favoriteList.entrySet()){
+            String ticker = entry.getKey();
+            favoriteItemList.add(new StockItem(ticker,
+                    String.format("%.2f",lastPrice.get(ticker)),
+                    companyName.get(ticker),
+                    changeInPrice.get(ticker),
+                    numShares.get(ticker),
+                    null));
+        }
+
+        SectionedRecyclerViewAdapter sectionedAdapter = new SectionedRecyclerViewAdapter();
+        sectionedAdapter.addSection(new StockSection("PORTFOLIO", portfolioItemList, this));
+        sectionedAdapter.addSection(new StockSection("FAVORITES", favoriteItemList, this));
+
+        RecyclerView recyclerView = findViewById(R.id.home_recycler);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        recyclerView.setAdapter(sectionedAdapter);
+
+//        DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(this, DividerItemDecoration.VERTICAL);
+//        recyclerView.addItemDecoration(dividerItemDecoration);
+
+        // Remove progress bar
         findViewById(R.id.progressbar).setVisibility(View.GONE);
     }
 

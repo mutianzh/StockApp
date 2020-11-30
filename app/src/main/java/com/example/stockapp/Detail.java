@@ -147,26 +147,6 @@ public class Detail extends AppCompatActivity {
         MenuItem star_border = menu.findItem(R.id.action_favorite);
         MenuItem star = menu.findItem(R.id.action_unfavorite);
 
-//        if (pendingrequests == 0){
-//            SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
-//            Set<String> set = sharedPreferences.getStringSet(FAVORITE_LIST, null);
-//
-//
-//            if(set == null){
-//                star_border.setVisible(true);
-//                star.setVisible(false);
-//            }else if (set.contains(TICKER)){
-//                star_border.setVisible(false);
-//                star.setVisible(true);
-//            }else{
-//                star_border.setVisible(true);
-//                star.setVisible(false);
-//            }
-//        }else{
-//            star_border.setVisible(false);
-//            star.setVisible(false);
-//        }
-
         if (pendingrequests == 0){
             SharedPreferences sharedPreferences = getSharedPreferences(FAVORITE_LIST, MODE_PRIVATE);
             String name = sharedPreferences.getString(TICKER, null);
@@ -751,7 +731,11 @@ public class Detail extends AppCompatActivity {
             // Update portfolio
             // current amount = current amount - amount
             SharedPreferences.Editor editor1 = portfolioList.edit();
-            editor1.putString(TICKER, String.format("%.2f", dCurrentAmount-damount));
+            if (dCurrentAmount-damount > 0) {
+                editor1.putString(TICKER, String.format("%.2f", dCurrentAmount - damount));
+            }else{
+                editor1.remove(TICKER);
+            }
             editor1.apply();
 
             // Update cash left
@@ -834,25 +818,6 @@ public class Detail extends AppCompatActivity {
     }
 
     public void addFavorite(String ticker){
-
-//        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
-//        Set<String> set = sharedPreferences.getStringSet(FAVORITE_LIST, null);
-//        SharedPreferences.Editor editor = sharedPreferences.edit();
-//
-//        if (set == null){
-//            set = new HashSet<String>();
-//            set.add(ticker);
-//        }else{
-//            set.add(ticker);
-//        }
-//        editor.putStringSet(FAVORITE_LIST, set);
-//        editor.apply();
-//
-//        SharedPreferences names = getSharedPreferences(NAMES, MODE_PRIVATE);
-//        SharedPreferences.Editor editor2 = names.edit();
-//        editor2.putString(TICKER, companyjson.get("name").getAsString());
-//        editor2.apply();
-
         SharedPreferences sharedPreferences = getSharedPreferences(FAVORITE_LIST, MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putString(ticker, companyjson.get("name").getAsString());
@@ -862,12 +827,6 @@ public class Detail extends AppCompatActivity {
     }
 
     public void removeFavorite(String ticker){
-//        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
-//        SharedPreferences.Editor editor = sharedPreferences.edit();
-//        Set<String> set = sharedPreferences.getStringSet(FAVORITE_LIST, null);
-//        set.remove(ticker);
-//        editor.putStringSet(FAVORITE_LIST, set);
-//        editor.apply();
 
         SharedPreferences sharedPreferences = getSharedPreferences(FAVORITE_LIST, MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
