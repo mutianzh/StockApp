@@ -147,18 +147,36 @@ public class Detail extends AppCompatActivity {
         MenuItem star_border = menu.findItem(R.id.action_favorite);
         MenuItem star = menu.findItem(R.id.action_unfavorite);
 
+//        if (pendingrequests == 0){
+//            SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
+//            Set<String> set = sharedPreferences.getStringSet(FAVORITE_LIST, null);
+//
+//
+//            if(set == null){
+//                star_border.setVisible(true);
+//                star.setVisible(false);
+//            }else if (set.contains(TICKER)){
+//                star_border.setVisible(false);
+//                star.setVisible(true);
+//            }else{
+//                star_border.setVisible(true);
+//                star.setVisible(false);
+//            }
+//        }else{
+//            star_border.setVisible(false);
+//            star.setVisible(false);
+//        }
+
         if (pendingrequests == 0){
-            SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
-            Set<String> set = sharedPreferences.getStringSet(FAVORITE_LIST, null);
-            if(set == null){
+            SharedPreferences sharedPreferences = getSharedPreferences(FAVORITE_LIST, MODE_PRIVATE);
+            String name = sharedPreferences.getString(TICKER, null);
+
+            if(name == null){
                 star_border.setVisible(true);
                 star.setVisible(false);
-            }else if (set.contains(TICKER)){
+            }else{
                 star_border.setVisible(false);
                 star.setVisible(true);
-            }else{
-                star_border.setVisible(true);
-                star.setVisible(false);
             }
         }else{
             star_border.setVisible(false);
@@ -566,6 +584,7 @@ public class Detail extends AppCompatActivity {
         //Display cash left
         SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
         String cash= sharedPreferences.getString(CASH,null);
+//        if (cash == null){ cash = "0";}
 
         TextView cash_available = tradeDialog.findViewById(R.id.cash_available);
         cash_available.setText(String.format("$%s available to buy %s",cash,TICKER));
@@ -660,6 +679,7 @@ public class Detail extends AppCompatActivity {
     public boolean buy(String amount, double price, String cash){
         double damount = 0;
         double dcash = Double.parseDouble(cash);
+
         try{
             damount = Double.parseDouble(amount);
         } catch (Exception e){
@@ -815,28 +835,43 @@ public class Detail extends AppCompatActivity {
 
     public void addFavorite(String ticker){
 
-        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
-        Set<String> set = sharedPreferences.getStringSet(FAVORITE_LIST, null);
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        if (set == null){
-            set = new HashSet<String>();
-            set.add(ticker);
-        }else{
-            set.add(ticker);
-        }
-        editor.putStringSet(FAVORITE_LIST, set);
-        editor.apply();
+//        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
+//        Set<String> set = sharedPreferences.getStringSet(FAVORITE_LIST, null);
+//        SharedPreferences.Editor editor = sharedPreferences.edit();
+//
+//        if (set == null){
+//            set = new HashSet<String>();
+//            set.add(ticker);
+//        }else{
+//            set.add(ticker);
+//        }
+//        editor.putStringSet(FAVORITE_LIST, set);
+//        editor.apply();
+//
+//        SharedPreferences names = getSharedPreferences(NAMES, MODE_PRIVATE);
+//        SharedPreferences.Editor editor2 = names.edit();
+//        editor2.putString(TICKER, companyjson.get("name").getAsString());
+//        editor2.apply();
 
+        SharedPreferences sharedPreferences = getSharedPreferences(FAVORITE_LIST, MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString(ticker, companyjson.get("name").getAsString());
+        editor.apply();
         Toast.makeText(Detail.this, String.format("\"%s\" was added to favorites", ticker),
                 Toast.LENGTH_LONG).show();
     }
 
     public void removeFavorite(String ticker){
-        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
+//        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
+//        SharedPreferences.Editor editor = sharedPreferences.edit();
+//        Set<String> set = sharedPreferences.getStringSet(FAVORITE_LIST, null);
+//        set.remove(ticker);
+//        editor.putStringSet(FAVORITE_LIST, set);
+//        editor.apply();
+
+        SharedPreferences sharedPreferences = getSharedPreferences(FAVORITE_LIST, MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
-        Set<String> set = sharedPreferences.getStringSet(FAVORITE_LIST, null);
-        set.remove(ticker);
-        editor.putStringSet(FAVORITE_LIST, set);
+        editor.remove(ticker);
         editor.apply();
 
         Toast.makeText(Detail.this, String.format("\"%s\" was removed from favorites", ticker),
@@ -864,24 +899,6 @@ public class Detail extends AppCompatActivity {
 
     }
 
-    //    public void displayIcon(){
-//        MenuItem star_border = mOptionsMenu.findItem(R.id.action_favorite);
-//        MenuItem star = mOptionsMenu.findItem(R.id.action_unfavorite);
-//
-//        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
-//        Set<String> set = sharedPreferences.getStringSet(FAVORITE_LIST, null);
-//        if(set == null){
-//            star_border.setVisible(true);
-//            star.setVisible(false);
-//        }else if (set.contains(TICKER)){
-//            star_border.setVisible(false);
-//            star.setVisible(true);
-//        }else{
-//            star_border.setVisible(true);
-//            star.setVisible(false);
-//        }
-//
-//    }
 
 
 }

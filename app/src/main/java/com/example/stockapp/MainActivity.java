@@ -1,6 +1,7 @@
 package com.example.stockapp;
 
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
 import androidx.appcompat.widget.Toolbar;
@@ -35,24 +36,37 @@ import com.google.gson.JsonParser;
 
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 
 public class MainActivity extends AppCompatActivity {
 
     RequestQueue queue;
+    private int pendingrequests;
+
     ArrayList<String> suggestions = new ArrayList<String>();
     public static final String EXTRA_MESSAGE = "com.example.stockapp.MESSAGE";
 
     public static final String SHARED_PREFS = "sharedPrefs";
+    public static final String CASH = "cash";
     public static final String FAVORITE_LIST="favoriteList";
     public static final String PORTFOLIO_LIST = "portfolioList";
-    public static final String CASH = "cash";
+
+    private HashMap<String, Double> lastPrice = new HashMap<String, Double>();
+    private HashMap<String, Double> change = new HashMap<String, Double>();
+    private HashMap<String, String> numShares = new HashMap<String, String>();
+    private HashMap<String, String> companyName = new HashMap<String, String>();
+
+    private JsonArray priceJson;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_main);
 
         queue = Volley.newRequestQueue(this);
@@ -61,7 +75,9 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(myToolbar);
         myToolbar.setTitleTextAppearance(this, R.style.BoldTextAppearance);
 
-        //resetcash();
+        getData();
+
+        //resetCash();
 
     }
 
@@ -161,16 +177,62 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    public void resetcash(){
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        findViewById(R.id.progressbar).setVisibility(View.VISIBLE);
+        System.out.println("Resume!!");
+        getData();
+    }
+
+    public void getData(){
+        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
+        Map<String,?> portfolioList = getSharedPreferences(PORTFOLIO_LIST, MODE_PRIVATE).getAll();
+        Map<String,?> favoriteList = getSharedPreferences(FAVORITE_LIST, MODE_PRIVATE).getAll();
+
+        StringBuilder tickerSet = new StringBuilder();
+
+        for (Map.Entry <String, ?> entry: favoriteList.entrySet()){
+
+            tickerSet.append(entry.getKey()).append(",");
+            companyName.put(entry.getKey(), entry.getValue().toString());
+        }
+
+        for (Map.Entry<String, ?> entry : portfolioList.entrySet()) {
+            tickerSet.append(entry.getKey()).append(",");
+            numShares.put(entry.getKey(), entry.getValue().toString());
+        }
+
+        String getpriceurl = "http://nodejsapp-env.eba-9tz487ps.us-east-1.elasticbeanstalk.com/price?arg1="+tickerSet;
+        StringRequest request = new StringRequest(Request.Method.GET, getpriceurl, new Response.Listener<String>() {
+            @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+            @Override
+            public void onResponse(String response) {
+                priceJson = JsonParser.parseString(response).getAsJsonArray();
+                updateViews();
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                error.printStackTrace();
+            }
+        });
+        queue.add(request);
+    }
+
+    public void updateViews(){
+
+
+        findViewById(R.id.progressbar).setVisibility(View.GONE);
+    }
+
+    public void resetCash(){
         SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putString(CASH, "20000");
         editor.apply();
-
     }
-
-
-
 
 }
 
