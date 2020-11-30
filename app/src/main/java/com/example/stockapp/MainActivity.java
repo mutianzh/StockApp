@@ -86,6 +86,7 @@ public class MainActivity extends AppCompatActivity {
         Toolbar myToolbar = (Toolbar) findViewById(R.id.myToolBar);
         setSupportActionBar(myToolbar);
         myToolbar.setTitleTextAppearance(this, R.style.BoldTextAppearance);
+        resetCash();
 
         getData();
 
@@ -101,7 +102,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }, delay);
 
-        //resetCash();
+
 
     }
 
@@ -354,9 +355,12 @@ public class MainActivity extends AppCompatActivity {
 
     public void resetCash(){
         SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putString(CASH, "20000");
-        editor.apply();
+        String cash = sharedPreferences.getString(CASH, null);
+        if (cash == null){
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putString(CASH, "20000");
+            editor.apply();
+        }
     }
 
 }
