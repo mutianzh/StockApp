@@ -15,6 +15,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -71,6 +72,8 @@ public class MainActivity extends AppCompatActivity {
     private HashMap<String, String> numShares = new HashMap<String, String>();
     private HashMap<String, String> companyName = new HashMap<String, String>();
 
+    public static final int DELAY = 3600;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,6 +88,18 @@ public class MainActivity extends AppCompatActivity {
         myToolbar.setTitleTextAppearance(this, R.style.BoldTextAppearance);
 
         getData();
+
+        final Handler handler = new Handler();
+        final int delay = DELAY * 1000; // 1000 milliseconds == 1 second
+
+        handler.postDelayed(new Runnable() {
+            public void run() {
+                //System.out.println("myHandler: here!");
+                getData();
+
+                handler.postDelayed(this, delay);
+            }
+        }, delay);
 
         //resetCash();
 
@@ -291,12 +306,42 @@ public class MainActivity extends AppCompatActivity {
                     numShares.get(ticker),
                     null));
         }
+        System.out.println("pot");
+        System.out.println(portfolioItemList);
+        System.out.println("fav");
+        System.out.println(favoriteItemList);
+
+        StockSection portfolioSection = new StockSection("PORTFOLIO", portfolioItemList, this);
+        portfolioSection.setOnItemClickListener(new StockSection.OnItemClickListener() {
+            @Override
+            public void onGoTo(int position) {
+                String query = portfolioItemList.get(position-1).getTicker();
+                Intent intent = new Intent(MainActivity.this, Detail.class);
+                String message = query;
+                intent.putExtra(EXTRA_MESSAGE, message);
+                startActivity(intent);
+            }
+        });
+
+        StockSection favoriteSection = new StockSection("FAVORITES", favoriteItemList, this);
+        favoriteSection.setOnItemClickListener(new StockSection.OnItemClickListener() {
+            @Override
+            public void onGoTo(int position) {
+                String query = favoriteItemList.get(position-portfolioItemList.size()-2).getTicker();
+                Intent intent = new Intent(MainActivity.this, Detail.class);
+                String message = query;
+                intent.putExtra(EXTRA_MESSAGE, message);
+                startActivity(intent);
+            }
+        });
+
 
         SectionedRecyclerViewAdapter sectionedAdapter = new SectionedRecyclerViewAdapter();
-        sectionedAdapter.addSection(new StockSection("PORTFOLIO", portfolioItemList, this));
-        sectionedAdapter.addSection(new StockSection("FAVORITES", favoriteItemList, this));
+        sectionedAdapter.addSection(portfolioSection);
+        sectionedAdapter.addSection(favoriteSection);
 
         RecyclerView recyclerView = findViewById(R.id.home_recycler);
+        recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(sectionedAdapter);
 

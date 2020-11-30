@@ -120,16 +120,16 @@ public class Detail extends AppCompatActivity {
 //        );
 
         final Handler handler = new Handler();
-        final int delay = 3600000; // 1000 milliseconds == 1 second
+        //final int delay = 3600000; // 1000 milliseconds == 1 second
 
         handler.postDelayed(new Runnable() {
             public void run() {
                 //System.out.println("myHandler: here!");
                 getPriceData(quote);
 
-                handler.postDelayed(this, delay);
+                handler.postDelayed(this, MainActivity.DELAY);
             }
-        }, delay);
+        }, MainActivity.DELAY);
 
     }
 

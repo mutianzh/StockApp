@@ -17,7 +17,7 @@ public class ItemViewHolder extends RecyclerView.ViewHolder {
     TextView changeView;
     Button goToButton;
 
-    public ItemViewHolder(@NonNull View itemView) {
+    public ItemViewHolder(@NonNull View itemView, StockSection.OnItemClickListener listener) {
         super(itemView);
         netWorthView = itemView.findViewById(R.id.netWorth);
         tickerView = itemView.findViewById(R.id.ticker);
@@ -26,5 +26,16 @@ public class ItemViewHolder extends RecyclerView.ViewHolder {
         trendView = itemView.findViewById(R.id.trendImage);
         changeView = itemView.findViewById(R.id.change);
         goToButton =itemView.findViewById(R.id.goToButton);
+
+        goToButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                int position = getAdapterPosition();
+                if (position != RecyclerView.NO_POSITION){
+                    listener.onGoTo(position);
+                }
+            }
+        });
+
     }
 }

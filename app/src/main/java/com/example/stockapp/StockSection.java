@@ -23,6 +23,16 @@ public class StockSection extends Section {
     private String mHeader;
     private ArrayList<StockItem> mStockList;
 
+    private OnItemClickListener mClickListener;
+
+    public interface OnItemClickListener{
+        void onGoTo(int position);
+    }
+
+    public void setOnItemClickListener(StockSection.OnItemClickListener listener){
+        mClickListener = listener;
+    }
+
     public StockSection(@NonNull String header, ArrayList<StockItem> list, Context context) {
         super(SectionParameters.builder()
                 .itemResourceId(R.layout.stock_item)
@@ -40,7 +50,7 @@ public class StockSection extends Section {
 
     @Override
     public RecyclerView.ViewHolder getItemViewHolder(View view) {
-        return new ItemViewHolder(view);
+        return new ItemViewHolder(view, mClickListener);
     }
 
     @Override
