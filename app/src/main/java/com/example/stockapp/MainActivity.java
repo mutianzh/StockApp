@@ -1,11 +1,15 @@
 package com.example.stockapp;
 
 
+import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
 import androidx.appcompat.widget.Toolbar;
+import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -13,6 +17,9 @@ import android.annotation.SuppressLint;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -49,6 +56,7 @@ import java.util.Map;
 import java.util.Set;
 
 import io.github.luizgrp.sectionedrecyclerviewadapter.SectionedRecyclerViewAdapter;
+import it.xabaras.android.recyclerview.swipedecorator.RecyclerViewSwipeDecorator;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -71,6 +79,11 @@ public class MainActivity extends AppCompatActivity {
     private HashMap<String, Double> changeInPrice = new HashMap<String, Double>();
     private HashMap<String, String> numShares = new HashMap<String, String>();
     private HashMap<String, String> companyName = new HashMap<String, String>();
+
+    private StockSection portfolioSection;
+    private StockSection favoriteSection;
+    private SectionedRecyclerViewAdapter sectionedAdapter;
+    private RecyclerView recyclerView;
 
     public static final int DELAY = 3600;
 
@@ -307,12 +320,8 @@ public class MainActivity extends AppCompatActivity {
                     numShares.get(ticker),
                     null));
         }
-        System.out.println("pot");
-        System.out.println(portfolioItemList);
-        System.out.println("fav");
-        System.out.println(favoriteItemList);
 
-        StockSection portfolioSection = new StockSection("PORTFOLIO", portfolioItemList, this);
+        portfolioSection = new StockSection("PORTFOLIO", portfolioItemList, this);
         portfolioSection.setOnItemClickListener(new StockSection.OnItemClickListener() {
             @Override
             public void onGoTo(int position) {
@@ -324,7 +333,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        StockSection favoriteSection = new StockSection("FAVORITES", favoriteItemList, this);
+        favoriteSection = new StockSection("FAVORITES", favoriteItemList, this);
         favoriteSection.setOnItemClickListener(new StockSection.OnItemClickListener() {
             @Override
             public void onGoTo(int position) {
@@ -336,21 +345,87 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+//        SectionedRecyclerViewAdapter sectionedAdapter = new SectionedRecyclerViewAdapter();
+//        sectionedAdapter.addSection(portfolioSection);
+//        sectionedAdapter.addSection(favoriteSection);
+//
+//        RecyclerView recyclerView = findViewById(R.id.home_recycler);
+//        recyclerView.setHasFixedSize(true);
+//        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+//        recyclerView.setAdapter(sectionedAdapter);
 
-        SectionedRecyclerViewAdapter sectionedAdapter = new SectionedRecyclerViewAdapter();
+        sectionedAdapter = new SectionedRecyclerViewAdapter();
         sectionedAdapter.addSection(portfolioSection);
         sectionedAdapter.addSection(favoriteSection);
 
-        RecyclerView recyclerView = findViewById(R.id.home_recycler);
+        recyclerView = findViewById(R.id.home_recycler);
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(sectionedAdapter);
+
+
+        ItemTouchHelper.SimpleCallback simpleCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) {
+            @Override
+            public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
+                return false;
+            }
+
+            @Override
+            public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
+                int position = viewHolder.getAdapterPosition();
+                int truePosition = position - 2 - portfolioItemList.size();
+                if (position >= 2 + portfolioItemList.size()){
+
+                    // Update sharedPreference
+                    SharedPreferences sharedPreferences = getSharedPreferences(FAVORITE_LIST, MODE_PRIVATE);
+                    SharedPreferences.Editor editor = sharedPreferences.edit();
+                    editor.remove(favoriteItemList.get(truePosition).getTicker());
+                    editor.apply();
+
+                    // Update recycler view
+                    favoriteItemList.remove(truePosition);
+
+                    favoriteSection = new StockSection("FAVORITES", favoriteItemList, MainActivity.this);
+
+                    sectionedAdapter = new SectionedRecyclerViewAdapter();
+                    sectionedAdapter.addSection(portfolioSection);
+                    sectionedAdapter.addSection(favoriteSection);
+
+                    recyclerView = findViewById(R.id.home_recycler);
+                    recyclerView.setHasFixedSize(true);
+                    recyclerView.setLayoutManager(new LinearLayoutManager(MainActivity.this));
+                    recyclerView.setAdapter(sectionedAdapter);
+
+                }
+            }
+
+            @Override
+            public void onChildDraw(@NonNull Canvas c, @NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, float dX, float dY, int actionState, boolean isCurrentlyActive) {
+                new RecyclerViewSwipeDecorator.Builder(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive)
+                        .addBackgroundColor(ContextCompat.getColor(MainActivity.this, R.color.deleteRed))
+                        .addActionIcon(R.drawable.ic_baseline_delete_24)
+                        .create()
+                        .decorate();
+
+                super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);
+            }
+        };
+
+        ItemTouchHelper itemTouchHelper= new ItemTouchHelper(simpleCallback);
+        itemTouchHelper.attachToRecyclerView(recyclerView);
+
 
 //        DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(this, DividerItemDecoration.VERTICAL);
 //        recyclerView.addItemDecoration(dividerItemDecoration);
 
         // Remove progress bar
         findViewById(R.id.progressbar).setVisibility(View.GONE);
+    }
+
+    public void toTiingo(View v){
+        String url = String.format("https://www.tiingo.com/");
+        Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+        startActivity(browserIntent);
     }
 
     public void resetCash(){

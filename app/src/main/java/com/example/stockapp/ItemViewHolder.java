@@ -6,9 +6,11 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
 public class ItemViewHolder extends RecyclerView.ViewHolder {
+    ConstraintLayout layoutView;
     TextView netWorthView;
     TextView tickerView;
     TextView sharesView;
@@ -19,6 +21,7 @@ public class ItemViewHolder extends RecyclerView.ViewHolder {
 
     public ItemViewHolder(@NonNull View itemView, StockSection.OnItemClickListener listener) {
         super(itemView);
+        layoutView = itemView.findViewById(R.id.itemView);
         netWorthView = itemView.findViewById(R.id.netWorth);
         tickerView = itemView.findViewById(R.id.ticker);
         sharesView = itemView.findViewById(R.id.sharesOrName);

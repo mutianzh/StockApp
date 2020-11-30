@@ -60,6 +60,16 @@
                 android:layout_height="wrap_content"
                 android:id="@+id/home_recycler"/>
 
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Powered by tiingo"
+                android:textStyle="italic"
+                android:clickable="true"
+                android:gravity="center"
+                android:layout_gravity="bottom"
+                android:onClick="toTiingo"/>
+
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
