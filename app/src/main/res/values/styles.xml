@@ -12,4 +12,14 @@
         <item name="android:textSize">24sp</item>
     </style>
 
+    <style name="TradDialogAppearance">
+        <item name="colorControlNormal">#989898</item>
+        <item name="colorControlActivated">@color/mainPurple</item>
+        <item name="colorControlHighlight">@color/mainPurple</item>
+    </style>
+
+    <style name="OverScrollAppearance">
+        <item name="android:colorEdgeEffect">@color/mainPurple</item>
+    </style>
+
 </resources>

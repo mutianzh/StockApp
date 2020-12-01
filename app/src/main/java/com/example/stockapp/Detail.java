@@ -578,7 +578,7 @@ public class Detail extends AppCompatActivity {
         totalCost.setText(String.format("%s x $%s/share = $%.2f",0,last,dlast*0));
 
         EditText editText = tradeDialog.findViewById(R.id.number_of_shares);
-        //editText.setText("0");
+        editText.setHint("0");
         editText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
