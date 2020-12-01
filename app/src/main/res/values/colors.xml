@@ -12,4 +12,5 @@
     <color name="deleteRed">#b60000</color>
     <color name="upTrend">#319A5C</color>
     <color name="trendingColor">#319A5C</color>
+    <color name="mainPurple">#4f24ad</color>
 </resources>
