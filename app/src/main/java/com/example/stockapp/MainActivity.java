@@ -214,14 +214,6 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        findViewById(R.id.progressbar).setVisibility(View.VISIBLE);
-        getData();
-    }
-
     public void getData(){
 //        Map<String,?> portfolioList = getSharedPreferences(PORTFOLIO_LIST, MODE_PRIVATE).getAll();
 //        Map<String,?> favoriteList = getSharedPreferences(FAVORITE_LIST, MODE_PRIVATE).getAll();
@@ -346,21 +338,12 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-//        SectionedRecyclerViewAdapter sectionedAdapter = new SectionedRecyclerViewAdapter();
-//        sectionedAdapter.addSection(portfolioSection);
-//        sectionedAdapter.addSection(favoriteSection);
-//
-//        RecyclerView recyclerView = findViewById(R.id.home_recycler);
-//        recyclerView.setHasFixedSize(true);
-//        recyclerView.setLayoutManager(new LinearLayoutManager(this));
-//        recyclerView.setAdapter(sectionedAdapter);
-
         sectionedAdapter = new SectionedRecyclerViewAdapter();
         sectionedAdapter.addSection(portfolioSection);
         sectionedAdapter.addSection(favoriteSection);
 
         recyclerView = findViewById(R.id.home_recycler);
-        //recyclerView.setHasFixedSize(true);
+        recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(sectionedAdapter);
 
@@ -379,19 +362,49 @@ public class MainActivity extends AppCompatActivity {
                 int fromPosition = viewHolder.getAdapterPosition();
                 int toPosition = target.getAdapterPosition();
 
+                viewHolder.itemView.setBackgroundColor(getResources().getColor(R.color.deleteRed));
+
                 if (fromPosition>1 && fromPosition < 1 + portfolioItemList.size() && toPosition>1 && toPosition < 1 + portfolioItemList.size()){
                     // Both start position and end position are in portfolio section
                     Collections.swap(portfolioItemList, fromPosition-1, toPosition-1);
                     //recyclerView.getAdapter().notifyItemMoved(fromPosition, toPosition);
-                    sectionedAdapter.notifyItemMoved(fromPosition, toPosition);
+                    //sectionedAdapter.notifyItemMoved(fromPosition, toPosition);
                     //sectionedAdapter.notifyItemMoved(fromPosition, toPosition);
                 }else if (fromPosition >= 2 + portfolioItemList.size()&&
                         toPosition >= 2 + portfolioItemList.size()){
 
                     Collections.swap(favoriteItemList, fromPosition - 2 - portfolioItemList.size(), toPosition - 2 - portfolioItemList.size());
-                    sectionedAdapter.notifyItemMoved(fromPosition, toPosition);
+                    //sectionedAdapter.notifyItemMoved(fromPosition, toPosition);
 
                 }
+
+                favoriteSection = new StockSection("FAVORITES", favoriteItemList, MainActivity.this);
+                favoriteSection.setOnItemClickListener(new StockSection.OnItemClickListener() {
+                    @Override
+                    public void onGoTo(int position) {
+                        String query = favoriteItemList.get(position-portfolioItemList.size()-2).getTicker();
+                        Intent intent = new Intent(MainActivity.this, Detail.class);
+                        String message = query;
+                        intent.putExtra(EXTRA_MESSAGE, message);
+                        startActivity(intent);
+                    }
+                });
+                portfolioSection = new StockSection("PORTFOLIO", portfolioItemList, MainActivity.this);
+                portfolioSection.setOnItemClickListener(new StockSection.OnItemClickListener() {
+                    @Override
+                    public void onGoTo(int position) {
+                        String query = portfolioItemList.get(position-1).getTicker();
+                        Intent intent = new Intent(MainActivity.this, Detail.class);
+                        String message = query;
+                        intent.putExtra(EXTRA_MESSAGE, message);
+                        startActivity(intent);
+                    }
+                });
+                sectionedAdapter = new SectionedRecyclerViewAdapter();
+                sectionedAdapter.addSection(portfolioSection);
+                sectionedAdapter.addSection(favoriteSection);
+
+                recyclerView.setAdapter(sectionedAdapter);
 
                 return true;
             }
@@ -418,8 +431,29 @@ public class MainActivity extends AppCompatActivity {
                     favoriteItemList.remove(truePosition);
 
 //                    recyclerView.getAdapter().notifyItemRemoved(position);
-                    favoriteSection = new StockSection("FAVORITES", favoriteItemList, MainActivity.this);
 
+                    favoriteSection = new StockSection("FAVORITES", favoriteItemList, MainActivity.this);
+                    favoriteSection.setOnItemClickListener(new StockSection.OnItemClickListener() {
+                        @Override
+                        public void onGoTo(int position) {
+                            String query = favoriteItemList.get(position-portfolioItemList.size()-2).getTicker();
+                            Intent intent = new Intent(MainActivity.this, Detail.class);
+                            String message = query;
+                            intent.putExtra(EXTRA_MESSAGE, message);
+                            startActivity(intent);
+                        }
+                    });
+                    portfolioSection = new StockSection("PORTFOLIO", portfolioItemList, MainActivity.this);
+                    portfolioSection.setOnItemClickListener(new StockSection.OnItemClickListener() {
+                        @Override
+                        public void onGoTo(int position) {
+                            String query = portfolioItemList.get(position-1).getTicker();
+                            Intent intent = new Intent(MainActivity.this, Detail.class);
+                            String message = query;
+                            intent.putExtra(EXTRA_MESSAGE, message);
+                            startActivity(intent);
+                        }
+                    });
                     sectionedAdapter = new SectionedRecyclerViewAdapter();
                     sectionedAdapter.addSection(portfolioSection);
                     sectionedAdapter.addSection(favoriteSection);
@@ -445,6 +479,9 @@ public class MainActivity extends AppCompatActivity {
         ItemTouchHelper itemTouchHelper= new ItemTouchHelper(simpleCallback);
         itemTouchHelper.attachToRecyclerView(recyclerView);
 
+//            ItemTouchHelper.Callback callback = new ItemMoveCallback();
+//            ItemTouchHelper touchHelper = new ItemTouchHelper(callback);
+//            touchHelper.attachToRecyclerView(recyclerView);
 
         // Remove progress bar
         findViewById(R.id.progressbar).setVisibility(View.GONE);
@@ -464,6 +501,13 @@ public class MainActivity extends AppCompatActivity {
             editor.putString(CASH, "20000");
             editor.apply();
         }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        findViewById(R.id.progressbar).setVisibility(View.VISIBLE);
+        getData();
     }
 
 }
