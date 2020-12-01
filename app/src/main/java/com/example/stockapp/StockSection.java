@@ -114,4 +114,5 @@ public class StockSection extends Section {
         headerHolder.headerView.setText(mHeader);
     }
 
+
 }

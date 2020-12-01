@@ -50,6 +50,8 @@ import com.google.gson.JsonParser;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -217,7 +219,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         findViewById(R.id.progressbar).setVisibility(View.VISIBLE);
-        System.out.println("Resume!!");
         getData();
     }
 
@@ -359,15 +360,45 @@ public class MainActivity extends AppCompatActivity {
         sectionedAdapter.addSection(favoriteSection);
 
         recyclerView = findViewById(R.id.home_recycler);
-        recyclerView.setHasFixedSize(true);
+        //recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(sectionedAdapter);
 
 
-        ItemTouchHelper.SimpleCallback simpleCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) {
+        ItemTouchHelper.SimpleCallback simpleCallback = new ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP|ItemTouchHelper.DOWN|ItemTouchHelper.START|ItemTouchHelper.END, ItemTouchHelper.LEFT) {
+
+            @Override
+            public int getMovementFlags(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder) {
+                final int dragFlags = ItemTouchHelper.UP| ItemTouchHelper.DOWN|ItemTouchHelper.START|ItemTouchHelper.END;
+                final int swipeFlags = ItemTouchHelper.LEFT;
+                return makeMovementFlags(dragFlags, swipeFlags);
+            }
+
             @Override
             public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
-                return false;
+                int fromPosition = viewHolder.getAdapterPosition();
+                int toPosition = target.getAdapterPosition();
+
+                if (fromPosition>1 && fromPosition < 1 + portfolioItemList.size() && toPosition>1 && toPosition < 1 + portfolioItemList.size()){
+                    // Both start position and end position are in portfolio section
+                    Collections.swap(portfolioItemList, fromPosition-1, toPosition-1);
+                    //recyclerView.getAdapter().notifyItemMoved(fromPosition, toPosition);
+                    sectionedAdapter.notifyItemMoved(fromPosition, toPosition);
+                    //sectionedAdapter.notifyItemMoved(fromPosition, toPosition);
+                }else if (fromPosition >= 2 + portfolioItemList.size()&&
+                        toPosition >= 2 + portfolioItemList.size()){
+
+                    Collections.swap(favoriteItemList, fromPosition - 2 - portfolioItemList.size(), toPosition - 2 - portfolioItemList.size());
+                    sectionedAdapter.notifyItemMoved(fromPosition, toPosition);
+
+                }
+
+                return true;
+            }
+
+            @Override
+            public boolean isLongPressDragEnabled() {
+                return true;
             }
 
             @Override
@@ -375,6 +406,7 @@ public class MainActivity extends AppCompatActivity {
                 int position = viewHolder.getAdapterPosition();
                 int truePosition = position - 2 - portfolioItemList.size();
                 if (position >= 2 + portfolioItemList.size()){
+                    // If item is within the favorite list
 
                     // Update sharedPreference
                     SharedPreferences sharedPreferences = getSharedPreferences(FAVORITE_LIST, MODE_PRIVATE);
@@ -385,15 +417,13 @@ public class MainActivity extends AppCompatActivity {
                     // Update recycler view
                     favoriteItemList.remove(truePosition);
 
+//                    recyclerView.getAdapter().notifyItemRemoved(position);
                     favoriteSection = new StockSection("FAVORITES", favoriteItemList, MainActivity.this);
 
                     sectionedAdapter = new SectionedRecyclerViewAdapter();
                     sectionedAdapter.addSection(portfolioSection);
                     sectionedAdapter.addSection(favoriteSection);
 
-                    recyclerView = findViewById(R.id.home_recycler);
-                    recyclerView.setHasFixedSize(true);
-                    recyclerView.setLayoutManager(new LinearLayoutManager(MainActivity.this));
                     recyclerView.setAdapter(sectionedAdapter);
 
                 }
@@ -411,12 +441,10 @@ public class MainActivity extends AppCompatActivity {
             }
         };
 
+
         ItemTouchHelper itemTouchHelper= new ItemTouchHelper(simpleCallback);
         itemTouchHelper.attachToRecyclerView(recyclerView);
 
-
-//        DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(this, DividerItemDecoration.VERTICAL);
-//        recyclerView.addItemDecoration(dividerItemDecoration);
 
         // Remove progress bar
         findViewById(R.id.progressbar).setVisibility(View.GONE);
