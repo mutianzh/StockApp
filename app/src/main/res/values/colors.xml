@@ -8,4 +8,8 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="splash">#f2f2f4</color>
+    <color name="downTrend">#993f47</color>
+    <color name="deleteRed">#b60000</color>
+    <color name="upTrend">#319A5C</color>
+    <color name="trendingColor">#319A5C</color>
 </resources>

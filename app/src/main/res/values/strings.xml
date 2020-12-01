@@ -1,4 +1,12 @@
 <resources>
     <string name="app_name">Stocks</string>
+    <string name="priceString">$%1$s</string>
+    <string name="currentPriceString">Current price:%1$s</string>
+    <string name="lowString">Low: %1$s</string>
+    <string name="bidPriceString">Bid price: %1$s</string>
+    <string name="openPriceString">Open price:%1$s</string>
+    <string name="midString">Mid: %1$s</string>
+    <string name="highString">High: %1$s</string>
+    <string name="volumeString">Volume:%1$s</string>
 
 </resources>
