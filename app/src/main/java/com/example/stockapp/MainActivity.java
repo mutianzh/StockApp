@@ -398,6 +398,12 @@ public class MainActivity extends AppCompatActivity {
                 }
                 super.onSelectedChanged(viewHolder, actionState);
             }
+
+            @Override
+            public void clearView(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder) {
+                super.clearView(recyclerView, viewHolder);
+                viewHolder.itemView.setBackgroundColor(Color.WHITE);
+            }
         };
 
 
