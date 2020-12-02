@@ -68,6 +68,8 @@ public class MainActivity extends AppCompatActivity {
     private int pendingrequests;
 
     ArrayList<String> suggestions = new ArrayList<String>();
+    private AutoSuggestAdapter autoSuggestAdapter;
+
     public static final String EXTRA_MESSAGE = "com.example.stockapp.MESSAGE";
 
     public static final String SHARED_PREFS = "sharedPrefs";
@@ -139,14 +141,10 @@ public class MainActivity extends AppCompatActivity {
         SearchView searchView = (SearchView) item.getActionView();
 
         // Get SearchView autocomplete object
+        autoSuggestAdapter = new AutoSuggestAdapter(this, android.R.layout.simple_dropdown_item_1line);
         final SearchView.SearchAutoComplete searchAutoComplete = (SearchView.SearchAutoComplete)searchView.findViewById(androidx.appcompat.R.id.search_src_text);
         searchAutoComplete.setThreshold(3);
-
-        //Create ArrayAdapter and add data to search autocomplete object;
-//        String dataArr[] =  {"Apple" , "Amazon" , "Amd", "Microsoft", "Microwave", "MicroNews", "Intel", "Intelligence"};
-//
-//        ArrayAdapter<String> newsAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, suggeestions);
-//        searchAutoComplete.setAdapter(newsAdapter);
+        searchAutoComplete.setAdapter(autoSuggestAdapter);
 
         // Listen to search view item on click event.
         searchAutoComplete.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -201,9 +199,8 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
 
-                ArrayAdapter<String> newsAdapter = new ArrayAdapter<String>(MainActivity.this, android.R.layout.simple_dropdown_item_1line, suggestions);
-                searchAutoComplete.setAdapter(newsAdapter);
-
+                autoSuggestAdapter.setData(suggestions);
+                autoSuggestAdapter.notifyDataSetChanged();
             }
 
         }, new Response.ErrorListener() {
