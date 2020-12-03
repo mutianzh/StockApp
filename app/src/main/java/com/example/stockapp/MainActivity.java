@@ -24,6 +24,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -101,7 +102,7 @@ public class MainActivity extends AppCompatActivity {
     private SectionedRecyclerViewAdapter sectionedAdapter;
     private RecyclerView recyclerView;
 
-    public static final int DELAY = 3600;
+    public static final int DELAY = 15;
 
 
     @Override
@@ -125,6 +126,7 @@ public class MainActivity extends AppCompatActivity {
         handler.postDelayed(new Runnable() {
             public void run() {
                 //System.out.println("myHandler: here!");
+                Log.v("Updating data", "Home page");
                 getData();
 
                 handler.postDelayed(this, delay);
@@ -224,8 +226,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void getData(){
-//        Map<String,?> portfolioList = getSharedPreferences(PORTFOLIO_LIST, MODE_PRIVATE).getAll();
-//        Map<String,?> favoriteList = getSharedPreferences(FAVORITE_LIST, MODE_PRIVATE).getAll();
 
         portfolioList = getSharedPreferences(PORTFOLIO_LIST, MODE_PRIVATE).getAll();
         favoriteList = getSharedPreferences(FAVORITE_LIST, MODE_PRIVATE).getAll();
@@ -303,30 +303,27 @@ public class MainActivity extends AppCompatActivity {
         // Add a dummy section for net worth value
         portfolioItemList.add(new StockItem(null, null, null, null, null, String.format("%.2f", dnetWorth)));
 
-        // Add portfolio items
-        for (Map.Entry <String, ?> entry: portfolioList.entrySet()){
-            String ticker = entry.getKey();
-            portfolioItemList.add(new StockItem(ticker,
-                    String.format("%.2f",lastPrice.get(ticker)),
-                    companyName.get(ticker),
-                    changeInPrice.get(ticker),
-                    numShares.get(ticker),
-                    null));
+        // Load portfolio items in order
+        try {
+            portfolioOrderList = (ArrayList<String>) ObjectSerializer.deserialize(orderList.getString(PORTFOLIO_ORDER, ObjectSerializer.serialize(new ArrayList<String>())));
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
         }
 
-//        // Add favorite items
-//        favoriteItemList = new ArrayList<>();
-//        for (Map.Entry <String, ?> entry: favoriteList.entrySet()){
-//            String ticker = entry.getKey();
-//            favoriteItemList.add(new StockItem(ticker,
-//                    String.format("%.2f",lastPrice.get(ticker)),
-//                    companyName.get(ticker),
-//                    changeInPrice.get(ticker),
-//                    numShares.get(ticker),
-//                    null));
-//        }
+        if (portfolioOrderList != null){
+            for (String ticker: portfolioOrderList){
+                portfolioItemList.add(new StockItem(ticker,
+                        String.format("%.2f",lastPrice.get(ticker)),
+                        companyName.get(ticker),
+                        changeInPrice.get(ticker),
+                        numShares.get(ticker),
+                        null));
+            }
+        }
 
-        // Get order list from shared preference
+        // Load favorite items in order
         try {
             favoriteOrderList = (ArrayList<String>) ObjectSerializer.deserialize(orderList.getString(FAVORITE_ORDER, ObjectSerializer.serialize(new ArrayList<String>())));
         } catch (IOException e) {
@@ -335,7 +332,6 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
-        // Add favorite items according to the list
         favoriteItemList = new ArrayList<>();
         if (favoriteOrderList != null){
             for (String ticker: favoriteOrderList){
@@ -364,11 +360,19 @@ public class MainActivity extends AppCompatActivity {
                 int fromPosition = viewHolder.getAdapterPosition();
                 int toPosition = target.getAdapterPosition();
 
-//                viewHolder.itemView.setBackgroundColor(getResources().getColor(R.color.deleteRed));
+                SharedPreferences.Editor orderEditor = orderList.edit();
 
                 if (fromPosition>1 && fromPosition < 1 + portfolioItemList.size() && toPosition>1 && toPosition < 1 + portfolioItemList.size()){
                     // Both start position and end position are in portfolio section
                     Collections.swap(portfolioItemList, fromPosition-1, toPosition-1);
+                    Collections.swap(portfolioOrderList, fromPosition-2, toPosition-2);
+
+                    try {
+                        orderEditor.putString(PORTFOLIO_ORDER, ObjectSerializer.serialize(portfolioOrderList));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    orderEditor.apply();
 
                 }else if (fromPosition >= 2 + portfolioItemList.size()&&
                         toPosition >= 2 + portfolioItemList.size()){
@@ -377,7 +381,6 @@ public class MainActivity extends AppCompatActivity {
                     Collections.swap(favoriteItemList, fromPosition - 2 - portfolioItemList.size(), toPosition - 2 - portfolioItemList.size());
                     Collections.swap(favoriteOrderList, fromPosition - 2 - portfolioItemList.size(), toPosition - 2 - portfolioItemList.size());
 
-                    SharedPreferences.Editor orderEditor = orderList.edit();
                     try {
                         orderEditor.putString(FAVORITE_ORDER, ObjectSerializer.serialize(favoriteOrderList));
                     } catch (IOException e) {

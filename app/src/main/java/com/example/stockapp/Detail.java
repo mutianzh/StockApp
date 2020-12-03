@@ -26,6 +26,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -118,7 +119,8 @@ public class Detail extends AppCompatActivity {
 
         handler.postDelayed(new Runnable() {
             public void run() {
-                //System.out.println("myHandler: here!");
+                //System.out.println("Detail page updating data");
+                Log.v("Updating data", "Detail page");
                 getPriceData(quote);
 
                 handler.postDelayed(this, delay);
@@ -602,7 +604,12 @@ public class Detail extends AppCompatActivity {
         buyButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                boolean status = buy(editText.getText().toString(), dlast, cash);
+                boolean status = false;
+                try {
+                    status = buy(editText.getText().toString(), dlast, cash);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
                 if (status){
                     // Purchase success
                     // Dismiss dialog
@@ -619,7 +626,12 @@ public class Detail extends AppCompatActivity {
         sellButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                boolean status = sell(editText.getText().toString(), dlast,  cash);
+                boolean status = false;
+                try {
+                    status = sell(editText.getText().toString(), dlast,  cash);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
                 if (status){
                     // Sell success
                     // Dismiss dialog
@@ -653,7 +665,7 @@ public class Detail extends AppCompatActivity {
         successDialog.show();
     }
 
-    public boolean buy(String amount, double price, String cash){
+    public boolean buy(String amount, double price, String cash) throws IOException {
         double damount = 0;
         double dcash = Double.parseDouble(cash);
 
@@ -676,6 +688,7 @@ public class Detail extends AppCompatActivity {
             SharedPreferences portfolioList = getSharedPreferences(PORTFOLIO_LIST, MODE_PRIVATE);
             String currentAmount = portfolioList.getString(TICKER,null);
             SharedPreferences.Editor editor1 = portfolioList.edit();
+
             if (currentAmount == null){
                 // First time purchase
                 editor1.putString(TICKER, amount);
@@ -685,6 +698,21 @@ public class Detail extends AppCompatActivity {
             }
             editor1.apply();
 
+            ArrayList<String> portfolioOrderList = new ArrayList<>();
+            SharedPreferences.Editor orderEditor = orderList.edit();
+            try {
+                portfolioOrderList = (ArrayList<String>) ObjectSerializer.deserialize(orderList.getString(PORTFOLIO_ORDER, ObjectSerializer.serialize(new ArrayList<String>())));
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+            }
+
+            if (!portfolioOrderList.contains(TICKER)){
+                portfolioOrderList.add(TICKER);
+                orderEditor.putString(PORTFOLIO_ORDER, ObjectSerializer.serialize(portfolioOrderList));
+                orderEditor.apply();
+            }
 
             // Update cash left
             // cash = cash - purchase amount * price
@@ -701,7 +729,7 @@ public class Detail extends AppCompatActivity {
 
     }
 
-    public boolean sell(String amount, double price, String cash){
+    public boolean sell(String amount, double price, String cash) throws IOException {
         double dcash = Double.parseDouble(cash);
 
         SharedPreferences portfolioList = getSharedPreferences(PORTFOLIO_LIST, MODE_PRIVATE);
@@ -727,12 +755,29 @@ public class Detail extends AppCompatActivity {
             return false;
         }else{
             // Update portfolio
-            // current amount = current amount - amount
+            // new amount = current amount - amount
+            ArrayList<String> portfolioOrderList = new ArrayList<>();
+            SharedPreferences.Editor orderEditor = orderList.edit();
+            try {
+                portfolioOrderList = (ArrayList<String>) ObjectSerializer.deserialize(orderList.getString(PORTFOLIO_ORDER, ObjectSerializer.serialize(new ArrayList<String>())));
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+            }
+
             SharedPreferences.Editor editor1 = portfolioList.edit();
             if (dCurrentAmount-damount > 0) {
+                // Still have shares left, update remaining amount
                 editor1.putString(TICKER, String.format("%.2f", dCurrentAmount - damount));
             }else{
+                // All shares are sold. Remove ticker from sharedPreference
                 editor1.remove(TICKER);
+
+                portfolioOrderList.remove(TICKER);
+                orderEditor.putString(PORTFOLIO_ORDER, ObjectSerializer.serialize(portfolioOrderList));
+                orderEditor.apply();
+
             }
             editor1.apply();
 
