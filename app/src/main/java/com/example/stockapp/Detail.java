@@ -148,7 +148,8 @@ public class Detail extends AppCompatActivity {
         MenuItem star_border = menu.findItem(R.id.action_favorite);
         MenuItem star = menu.findItem(R.id.action_unfavorite);
 
-        if (pendingrequests == 0){
+        if (pendingrequests == 0 && TICKER != null && !TICKER.isEmpty()){
+
             SharedPreferences sharedPreferences = getSharedPreferences(FAVORITE_LIST, MODE_PRIVATE);
             String name = sharedPreferences.getString(TICKER, null);
 
@@ -800,7 +801,7 @@ public class Detail extends AppCompatActivity {
         twitter.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String url = String.format("https://twitter.com/intent/tweet?url=%s", newsItem.get("url").getAsString());
+                String url = String.format("https://twitter.com/intent/tweet?text=%s&url=%s", "Check out this Link:",newsItem.get("url").getAsString());
                 Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
                 startActivity(browserIntent);
             }
