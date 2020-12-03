@@ -103,6 +103,8 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
 
     public static final int DELAY = 15;
+    Handler handler = new Handler();
+    Runnable runnable;
 
 
     @Override
@@ -119,22 +121,6 @@ public class MainActivity extends AppCompatActivity {
         resetCash();
 
         getData();
-
-        final Handler handler = new Handler();
-        final int delay = DELAY * 1000; // 1000 milliseconds == 1 second
-
-        handler.postDelayed(new Runnable() {
-            public void run() {
-                //System.out.println("myHandler: here!");
-                Log.v("Updating data", "Home page");
-                getData();
-
-                handler.postDelayed(this, delay);
-            }
-        }, delay);
-
-
-
     }
 
     @SuppressLint("RestrictedApi")
@@ -474,11 +460,13 @@ public class MainActivity extends AppCompatActivity {
         portfolioSection.setOnItemClickListener(new StockSection.OnItemClickListener() {
             @Override
             public void onGoTo(int position) {
-                String query = portfolioItemList.get(position-1).getTicker();
-                Intent intent = new Intent(MainActivity.this, Detail.class);
-                String message = query;
-                intent.putExtra(EXTRA_MESSAGE, message);
-                startActivity(intent);
+                if (position != 1){
+                    String query = portfolioItemList.get(position-1).getTicker();
+                    Intent intent = new Intent(MainActivity.this, Detail.class);
+                    String message = query;
+                    intent.putExtra(EXTRA_MESSAGE, message);
+                    startActivity(intent);
+                }
             }
         });
 
@@ -526,8 +514,24 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
         findViewById(R.id.progressbar).setVisibility(View.VISIBLE);
         getData();
+
+        final int delay = DELAY * 1000; // 1000 milliseconds == 1 second
+        handler.postDelayed(runnable = new Runnable() {
+            public void run() {
+                //System.out.println("myHandler: here!");
+                Log.v("Updating data", "Home page");
+                getData();
+
+                handler.postDelayed(runnable, delay);
+            }
+        }, delay);
     }
 
+    @Override
+    protected void onPause() {
+        handler.removeCallbacks(runnable); //stop handler when activity not visible
+        super.onPause();
+    }
 }
 
 

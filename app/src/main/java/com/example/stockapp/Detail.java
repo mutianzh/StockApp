@@ -90,6 +90,10 @@ public class Detail extends AppCompatActivity {
 
     SharedPreferences orderList;
 
+    Handler handler = new Handler();
+    Runnable runnable;
+    String quote;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -104,7 +108,7 @@ public class Detail extends AppCompatActivity {
 
         // Get search quote
         Intent intent = getIntent();
-        String quote = intent.getStringExtra(MainActivity.EXTRA_MESSAGE);
+        quote = intent.getStringExtra(MainActivity.EXTRA_MESSAGE);
 
         TextView textView = findViewById(R.id.textView);
         textView.setText(quote);
@@ -113,19 +117,6 @@ public class Detail extends AppCompatActivity {
         findViewById(R.id.progressbar).setVisibility(View.VISIBLE);
 
         getData(quote);
-
-        final Handler handler = new Handler();
-        final int delay = MainActivity.DELAY*1000; // 1000 milliseconds == 1 second
-
-        handler.postDelayed(new Runnable() {
-            public void run() {
-                //System.out.println("Detail page updating data");
-                Log.v("Updating data", "Detail page");
-                getPriceData(quote);
-
-                handler.postDelayed(this, delay);
-            }
-        }, delay);
 
     }
 
@@ -939,6 +930,26 @@ public class Detail extends AppCompatActivity {
 
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
 
+        final int delay = MainActivity.DELAY*1000; // 1000 milliseconds == 1 second
+        handler.postDelayed(runnable = new Runnable() {
+            public void run() {
+                //System.out.println("Detail page updating data");
+                Log.v("Updating data", "Detail page");
+                getPriceData(quote);
 
+                handler.postDelayed(runnable, delay);
+            }
+        }, delay);
+    }
+
+    @Override
+    protected void onPause() {
+        handler.removeCallbacks(runnable); //stop handler when activity not visible
+        super.onPause();
+
+    }
 }
