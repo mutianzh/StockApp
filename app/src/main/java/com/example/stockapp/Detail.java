@@ -56,6 +56,7 @@ import com.google.gson.JsonParser;
 
 import org.w3c.dom.Text;
 
+import java.io.IOException;
 import java.sql.Timestamp;
 import java.text.DecimalFormat;
 import java.text.ParseException;
@@ -82,6 +83,11 @@ public class Detail extends AppCompatActivity {
     private String FAVORITE_LIST= MainActivity.FAVORITE_LIST;
     private String PORTFOLIO_LIST = MainActivity.PORTFOLIO_LIST;
     private String CASH = MainActivity.CASH;
+    private String ORDER_LIST = MainActivity.ORDER_LIST;
+    private String FAVORITE_ORDER = MainActivity.FAVORITE_ORDER;
+    private String PORTFOLIO_ORDER = MainActivity.PORTFOLIO_ORDER;
+
+    SharedPreferences orderList;
 
 
     @Override
@@ -106,19 +112,6 @@ public class Detail extends AppCompatActivity {
         findViewById(R.id.progressbar).setVisibility(View.VISIBLE);
 
         getData(quote);
-        // changes for alarm receiver
-//        AlarmReceiver.scheduleAlarms(this);
-
-//        LocalBroadcastManager.getInstance(this).registerReceiver(
-//                new BroadcastReceiver() {
-//                    @Override
-//                    public void onReceive(Context context, Intent intent) {
-//                        //String quote1 = intent.getStringExtra(MainActivity.EXTRA_MESSAGE);
-//                        //getPriceData(quote);
-//                        System.out.println("MyReceiver: here!");
-//                    }
-//                }, new IntentFilter(DetailUpdateService.ACTIVITY_SERVICE)
-//        );
 
         final Handler handler = new Handler();
         final int delay = MainActivity.DELAY*1000; // 1000 milliseconds == 1 second
@@ -323,16 +316,18 @@ public class Detail extends AppCompatActivity {
     private  void updateviews(String[] pricedata, String[] companydata, String[] chartdata, String[] newsdata){
 
         // Check error cases
-        // Wrong ticker error
         pricejson = JsonParser.parseString(pricedata[0]).getAsJsonArray();
 
         if (pricejson.size() == 0){
+            // Wrong ticker error
             findViewById(R.id.alldetails).setVisibility(View.GONE);
             findViewById(R.id.progressbar).setVisibility(View.GONE);
             TextView errormessage= findViewById(R.id.errormessage);
             errormessage.setText("Wrong ticker");
 
         }else {
+
+            orderList = getSharedPreferences(ORDER_LIST, MODE_PRIVATE);
 
             DecimalFormat df2 = new DecimalFormat("#.##");
 
@@ -690,6 +685,7 @@ public class Detail extends AppCompatActivity {
             }
             editor1.apply();
 
+
             // Update cash left
             // cash = cash - purchase amount * price
             SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
@@ -824,6 +820,25 @@ public class Detail extends AppCompatActivity {
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putString(ticker, companyjson.get("name").getAsString());
         editor.apply();
+
+        ArrayList<String> favoriteOrderList = new ArrayList<>();
+        SharedPreferences.Editor orderEditor = orderList.edit();
+        try {
+            favoriteOrderList = (ArrayList<String>) ObjectSerializer.deserialize(orderList.getString(FAVORITE_ORDER, ObjectSerializer.serialize(new ArrayList<String>())));
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        favoriteOrderList.add(ticker);
+        try {
+            orderEditor.putString(FAVORITE_ORDER, ObjectSerializer.serialize(favoriteOrderList));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        orderEditor.apply();
+
         Toast.makeText(Detail.this, String.format("\"%s\" was added to favorites", ticker),
                 Toast.LENGTH_LONG).show();
     }
@@ -834,6 +849,25 @@ public class Detail extends AppCompatActivity {
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.remove(ticker);
         editor.apply();
+
+        ArrayList<String> favoriteOrderList = new ArrayList<>();
+        SharedPreferences.Editor orderEditor = orderList.edit();
+        try {
+            favoriteOrderList = (ArrayList<String>) ObjectSerializer.deserialize(orderList.getString(FAVORITE_ORDER, ObjectSerializer.serialize(new ArrayList<String>())));
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        favoriteOrderList.remove(ticker);
+        try {
+            orderEditor.putString(FAVORITE_ORDER, ObjectSerializer.serialize(favoriteOrderList));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        orderEditor.apply();
+
 
         Toast.makeText(Detail.this, String.format("\"%s\" was removed from favorites", ticker),
                 Toast.LENGTH_LONG).show();

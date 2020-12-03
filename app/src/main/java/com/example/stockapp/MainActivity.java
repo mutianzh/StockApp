@@ -48,6 +48,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -76,12 +77,19 @@ public class MainActivity extends AppCompatActivity {
     public static final String CASH = "cash";
     public static final String FAVORITE_LIST="favoriteList";
     public static final String PORTFOLIO_LIST = "portfolioList";
+    public static final String ORDER_LIST = "orderList";
+    public static final String FAVORITE_ORDER = "favoriteOrder";
+    public static final String PORTFOLIO_ORDER = "portfolioOrder";
+
+    SharedPreferences orderList;
 
     Map<String,?> portfolioList;
     Map<String,?> favoriteList;
 
     ArrayList<StockItem> portfolioItemList;
     ArrayList<StockItem> favoriteItemList;
+    ArrayList<String> portfolioOrderList;
+    ArrayList<String> favoriteOrderList;
 
     private HashMap<String, Double> lastPrice = new HashMap<String, Double>();
     private HashMap<String, Double> changeInPrice = new HashMap<String, Double>();
@@ -264,6 +272,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void updateViews(){
+
+        orderList = getSharedPreferences(ORDER_LIST, MODE_PRIVATE);
+
         // Update date
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("MMMM dd, yyyy");
         Calendar calendar = Calendar.getInstance();
@@ -303,16 +314,38 @@ public class MainActivity extends AppCompatActivity {
                     null));
         }
 
-        // Add favorite items
+//        // Add favorite items
+//        favoriteItemList = new ArrayList<>();
+//        for (Map.Entry <String, ?> entry: favoriteList.entrySet()){
+//            String ticker = entry.getKey();
+//            favoriteItemList.add(new StockItem(ticker,
+//                    String.format("%.2f",lastPrice.get(ticker)),
+//                    companyName.get(ticker),
+//                    changeInPrice.get(ticker),
+//                    numShares.get(ticker),
+//                    null));
+//        }
+
+        // Get order list from shared preference
+        try {
+            favoriteOrderList = (ArrayList<String>) ObjectSerializer.deserialize(orderList.getString(FAVORITE_ORDER, ObjectSerializer.serialize(new ArrayList<String>())));
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        // Add favorite items according to the list
         favoriteItemList = new ArrayList<>();
-        for (Map.Entry <String, ?> entry: favoriteList.entrySet()){
-            String ticker = entry.getKey();
-            favoriteItemList.add(new StockItem(ticker,
-                    String.format("%.2f",lastPrice.get(ticker)),
-                    companyName.get(ticker),
-                    changeInPrice.get(ticker),
-                    numShares.get(ticker),
-                    null));
+        if (favoriteOrderList != null){
+            for (String ticker: favoriteOrderList){
+                favoriteItemList.add(new StockItem(ticker,
+                        String.format("%.2f",lastPrice.get(ticker)),
+                        companyName.get(ticker),
+                        changeInPrice.get(ticker),
+                        numShares.get(ticker),
+                        null));
+            }
         }
 
         updateRecyclerView();
@@ -336,15 +369,21 @@ public class MainActivity extends AppCompatActivity {
                 if (fromPosition>1 && fromPosition < 1 + portfolioItemList.size() && toPosition>1 && toPosition < 1 + portfolioItemList.size()){
                     // Both start position and end position are in portfolio section
                     Collections.swap(portfolioItemList, fromPosition-1, toPosition-1);
-                    //recyclerView.getAdapter().notifyItemMoved(fromPosition, toPosition);
-                    //sectionedAdapter.notifyItemMoved(fromPosition, toPosition);
-                    //sectionedAdapter.notifyItemMoved(fromPosition, toPosition);
+
                 }else if (fromPosition >= 2 + portfolioItemList.size()&&
                         toPosition >= 2 + portfolioItemList.size()){
                     // Both start position and end position are in favorites section
 
                     Collections.swap(favoriteItemList, fromPosition - 2 - portfolioItemList.size(), toPosition - 2 - portfolioItemList.size());
-                    //sectionedAdapter.notifyItemMoved(fromPosition, toPosition);
+                    Collections.swap(favoriteOrderList, fromPosition - 2 - portfolioItemList.size(), toPosition - 2 - portfolioItemList.size());
+
+                    SharedPreferences.Editor orderEditor = orderList.edit();
+                    try {
+                        orderEditor.putString(FAVORITE_ORDER, ObjectSerializer.serialize(favoriteOrderList));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    orderEditor.apply();
 
                 }
 
@@ -370,6 +409,15 @@ public class MainActivity extends AppCompatActivity {
                     SharedPreferences.Editor editor = sharedPreferences.edit();
                     editor.remove(favoriteItemList.get(truePosition).getTicker());
                     editor.apply();
+
+                    SharedPreferences.Editor orderEditor = orderList.edit();
+                    favoriteOrderList.remove(favoriteItemList.get(truePosition).getTicker());
+                    try {
+                        orderEditor.putString(FAVORITE_ORDER, ObjectSerializer.serialize(favoriteOrderList));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    orderEditor.apply();
 
                     // Update recycler view
                     favoriteItemList.remove(truePosition);
