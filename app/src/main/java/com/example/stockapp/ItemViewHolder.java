@@ -30,6 +30,16 @@ public class ItemViewHolder extends RecyclerView.ViewHolder {
         changeView = itemView.findViewById(R.id.change);
         goToButton =itemView.findViewById(R.id.goToButton);
 
+        itemView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                int position = getAdapterPosition();
+                if (position != RecyclerView.NO_POSITION){
+                    listener.onGoTo(position);
+                }
+            }
+        });
+
         goToButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

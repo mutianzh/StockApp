@@ -24,6 +24,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -48,6 +49,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -76,12 +78,19 @@ public class MainActivity extends AppCompatActivity {
     public static final String CASH = "cash";
     public static final String FAVORITE_LIST="favoriteList";
     public static final String PORTFOLIO_LIST = "portfolioList";
+    public static final String ORDER_LIST = "orderList";
+    public static final String FAVORITE_ORDER = "favoriteOrder";
+    public static final String PORTFOLIO_ORDER = "portfolioOrder";
+
+    SharedPreferences orderList;
 
     Map<String,?> portfolioList;
     Map<String,?> favoriteList;
 
     ArrayList<StockItem> portfolioItemList;
     ArrayList<StockItem> favoriteItemList;
+    ArrayList<String> portfolioOrderList;
+    ArrayList<String> favoriteOrderList;
 
     private HashMap<String, Double> lastPrice = new HashMap<String, Double>();
     private HashMap<String, Double> changeInPrice = new HashMap<String, Double>();
@@ -93,7 +102,9 @@ public class MainActivity extends AppCompatActivity {
     private SectionedRecyclerViewAdapter sectionedAdapter;
     private RecyclerView recyclerView;
 
-    public static final int DELAY = 3600;
+    public static final int DELAY = 15;
+    Handler handler = new Handler();
+    Runnable runnable;
 
 
     @Override
@@ -110,21 +121,6 @@ public class MainActivity extends AppCompatActivity {
         resetCash();
 
         getData();
-
-        final Handler handler = new Handler();
-        final int delay = DELAY * 1000; // 1000 milliseconds == 1 second
-
-        handler.postDelayed(new Runnable() {
-            public void run() {
-                //System.out.println("myHandler: here!");
-                getData();
-
-                handler.postDelayed(this, delay);
-            }
-        }, delay);
-
-
-
     }
 
     @SuppressLint("RestrictedApi")
@@ -216,8 +212,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void getData(){
-//        Map<String,?> portfolioList = getSharedPreferences(PORTFOLIO_LIST, MODE_PRIVATE).getAll();
-//        Map<String,?> favoriteList = getSharedPreferences(FAVORITE_LIST, MODE_PRIVATE).getAll();
 
         portfolioList = getSharedPreferences(PORTFOLIO_LIST, MODE_PRIVATE).getAll();
         favoriteList = getSharedPreferences(FAVORITE_LIST, MODE_PRIVATE).getAll();
@@ -264,6 +258,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void updateViews(){
+
+        orderList = getSharedPreferences(ORDER_LIST, MODE_PRIVATE);
+
         // Update date
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("MMMM dd, yyyy");
         Calendar calendar = Calendar.getInstance();
@@ -292,27 +289,45 @@ public class MainActivity extends AppCompatActivity {
         // Add a dummy section for net worth value
         portfolioItemList.add(new StockItem(null, null, null, null, null, String.format("%.2f", dnetWorth)));
 
-        // Add portfolio items
-        for (Map.Entry <String, ?> entry: portfolioList.entrySet()){
-            String ticker = entry.getKey();
-            portfolioItemList.add(new StockItem(ticker,
-                    String.format("%.2f",lastPrice.get(ticker)),
-                    companyName.get(ticker),
-                    changeInPrice.get(ticker),
-                    numShares.get(ticker),
-                    null));
+        // Load portfolio items in order
+        try {
+            portfolioOrderList = (ArrayList<String>) ObjectSerializer.deserialize(orderList.getString(PORTFOLIO_ORDER, ObjectSerializer.serialize(new ArrayList<String>())));
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
         }
 
-        // Add favorite items
+        if (portfolioOrderList != null){
+            for (String ticker: portfolioOrderList){
+                portfolioItemList.add(new StockItem(ticker,
+                        String.format("%.2f",lastPrice.get(ticker)),
+                        companyName.get(ticker),
+                        changeInPrice.get(ticker),
+                        numShares.get(ticker),
+                        null));
+            }
+        }
+
+        // Load favorite items in order
+        try {
+            favoriteOrderList = (ArrayList<String>) ObjectSerializer.deserialize(orderList.getString(FAVORITE_ORDER, ObjectSerializer.serialize(new ArrayList<String>())));
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+
         favoriteItemList = new ArrayList<>();
-        for (Map.Entry <String, ?> entry: favoriteList.entrySet()){
-            String ticker = entry.getKey();
-            favoriteItemList.add(new StockItem(ticker,
-                    String.format("%.2f",lastPrice.get(ticker)),
-                    companyName.get(ticker),
-                    changeInPrice.get(ticker),
-                    numShares.get(ticker),
-                    null));
+        if (favoriteOrderList != null){
+            for (String ticker: favoriteOrderList){
+                favoriteItemList.add(new StockItem(ticker,
+                        String.format("%.2f",lastPrice.get(ticker)),
+                        companyName.get(ticker),
+                        changeInPrice.get(ticker),
+                        numShares.get(ticker),
+                        null));
+            }
         }
 
         updateRecyclerView();
@@ -331,20 +346,33 @@ public class MainActivity extends AppCompatActivity {
                 int fromPosition = viewHolder.getAdapterPosition();
                 int toPosition = target.getAdapterPosition();
 
-//                viewHolder.itemView.setBackgroundColor(getResources().getColor(R.color.deleteRed));
+                SharedPreferences.Editor orderEditor = orderList.edit();
 
                 if (fromPosition>1 && fromPosition < 1 + portfolioItemList.size() && toPosition>1 && toPosition < 1 + portfolioItemList.size()){
                     // Both start position and end position are in portfolio section
                     Collections.swap(portfolioItemList, fromPosition-1, toPosition-1);
-                    //recyclerView.getAdapter().notifyItemMoved(fromPosition, toPosition);
-                    //sectionedAdapter.notifyItemMoved(fromPosition, toPosition);
-                    //sectionedAdapter.notifyItemMoved(fromPosition, toPosition);
+                    Collections.swap(portfolioOrderList, fromPosition-2, toPosition-2);
+
+                    try {
+                        orderEditor.putString(PORTFOLIO_ORDER, ObjectSerializer.serialize(portfolioOrderList));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    orderEditor.apply();
+
                 }else if (fromPosition >= 2 + portfolioItemList.size()&&
                         toPosition >= 2 + portfolioItemList.size()){
                     // Both start position and end position are in favorites section
 
                     Collections.swap(favoriteItemList, fromPosition - 2 - portfolioItemList.size(), toPosition - 2 - portfolioItemList.size());
-                    //sectionedAdapter.notifyItemMoved(fromPosition, toPosition);
+                    Collections.swap(favoriteOrderList, fromPosition - 2 - portfolioItemList.size(), toPosition - 2 - portfolioItemList.size());
+
+                    try {
+                        orderEditor.putString(FAVORITE_ORDER, ObjectSerializer.serialize(favoriteOrderList));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    orderEditor.apply();
 
                 }
 
@@ -370,6 +398,15 @@ public class MainActivity extends AppCompatActivity {
                     SharedPreferences.Editor editor = sharedPreferences.edit();
                     editor.remove(favoriteItemList.get(truePosition).getTicker());
                     editor.apply();
+
+                    SharedPreferences.Editor orderEditor = orderList.edit();
+                    favoriteOrderList.remove(favoriteItemList.get(truePosition).getTicker());
+                    try {
+                        orderEditor.putString(FAVORITE_ORDER, ObjectSerializer.serialize(favoriteOrderList));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    orderEditor.apply();
 
                     // Update recycler view
                     favoriteItemList.remove(truePosition);
@@ -423,11 +460,13 @@ public class MainActivity extends AppCompatActivity {
         portfolioSection.setOnItemClickListener(new StockSection.OnItemClickListener() {
             @Override
             public void onGoTo(int position) {
-                String query = portfolioItemList.get(position-1).getTicker();
-                Intent intent = new Intent(MainActivity.this, Detail.class);
-                String message = query;
-                intent.putExtra(EXTRA_MESSAGE, message);
-                startActivity(intent);
+                if (position != 1){
+                    String query = portfolioItemList.get(position-1).getTicker();
+                    Intent intent = new Intent(MainActivity.this, Detail.class);
+                    String message = query;
+                    intent.putExtra(EXTRA_MESSAGE, message);
+                    startActivity(intent);
+                }
             }
         });
 
@@ -475,8 +514,24 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
         findViewById(R.id.progressbar).setVisibility(View.VISIBLE);
         getData();
+
+        final int delay = DELAY * 1000; // 1000 milliseconds == 1 second
+        handler.postDelayed(runnable = new Runnable() {
+            public void run() {
+                //System.out.println("myHandler: here!");
+                Log.v("Updating data", "Home page");
+                getData();
+
+                handler.postDelayed(runnable, delay);
+            }
+        }, delay);
     }
 
+    @Override
+    protected void onPause() {
+        handler.removeCallbacks(runnable); //stop handler when activity not visible
+        super.onPause();
+    }
 }
 
 
